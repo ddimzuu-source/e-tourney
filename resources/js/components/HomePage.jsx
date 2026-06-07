@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import { Trophy, BookOpen, Info, LogIn, Swords, Gamepad2, Users, UserCheck, Flame, Wallet, BarChart3 } from "lucide-react";
 // ── WhatsApp FAB ─────────────────────────────────────────────────────────────
 function WhatsAppFAB() {
     const [open, setOpen] = useState(false);
@@ -79,43 +79,82 @@ function WaIcon({ size = 24, color = "#25d366" }) {
 function Navbar() {
     return (
         <nav style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
+            display: "flex", alignItems: "center", justifyBetween: "space-between",
+            justifyContent: "space-between",
             padding: "1rem 2rem",
             borderBottom: "0.5px solid rgba(255,255,255,0.08)",
             background: "#0a1a14",
             position: "sticky", top: 0, zIndex: 100,
         }}>
+            {/* Logo E-TOURNEY dengan Ikon Swords */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
                     width: 32, height: 32, borderRadius: 8,
                     background: "#1a9e75", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    color: "#fff", fontSize: 16, fontWeight: 700,
-                }}>E</div>
+                    alignItems: "center", justifyConten: "center",
+                    justifyContent: "center", color: "#fff", fontSize: 16, fontWeight: 700,
+                }}>
+                    <Swords size={16} />
+                </div>
                 <span style={{ fontSize: 16, fontWeight: 600, color: "#f0faf6", letterSpacing: 1 }}>
                     E-TOURNEY
                 </span>
             </div>
 
+            {/* Menu Navigasi Tengah dengan Ikon */}
             <div style={{ display: "flex", gap: 24 }}>
-                {["Turnamen", "Cara daftar", "Tentang"].map((item) => (
-                    <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`} style={{
-                        fontSize: 14, color: "#7ab89e", textDecoration: "none",
-                        transition: "color 0.15s",
-                    }}
-                        onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
-                        onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
-                    >{item}</a>
-                ))}
+                {/* Menu: Turnamen */}
+                <a href="#turnamen" style={{
+                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
+                    transition: "color 0.15s",
+                    display: "inline-flex", alignItems: "center", gap: 6 // Mengunci posisi agar sejajar sempurna
+                }}
+                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
+                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
+                >
+                    <Trophy size={14} />
+                    Turnamen
+                </a>
+
+                {/* Menu: Cara Daftar */}
+                <a href="#cara-daftar" style={{
+                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
+                    transition: "color 0.15s",
+                    display: "inline-flex", alignItems: "center", gap: 6
+                }}
+                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
+                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
+                >
+                    <BookOpen size={14} />
+                    Cara daftar
+                </a>
+
+                {/* Menu: Tentang */}
+                <a href="#cara-daftar" style={{ // Mengarah ke id section terdekat
+                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
+                    transition: "color 0.15s",
+                    display: "inline-flex", alignItems: "center", gap: 6
+                }}
+                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
+                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
+                >
+                    <Info size={14} />
+                    Tentang
+                </a>
             </div>
 
-            <div style={{ display: "flex", gap: 8 }}>
+            {/* Tombol Kanan dengan Ikon LogIn */}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <Link to="/login" style={{
                     fontSize: 13, padding: "7px 18px", borderRadius: 8,
                     border: "0.5px solid rgba(255,255,255,0.15)",
                     background: "transparent", color: "#c8e6da",
                     textDecoration: "none", cursor: "pointer",
-                }}>Masuk</Link>
+                    display: "inline-flex", alignItems: "center", gap: 6
+                }}>
+                    <LogIn size={13} />
+                    Masuk
+                </Link>
                 <Link to="/register" style={{
                     fontSize: 13, padding: "7px 18px", borderRadius: 8,
                     border: "none", background: "#1a9e75", color: "#fff",
@@ -219,10 +258,10 @@ function Hero() {
 
 // ── Stats Bar ─────────────────────────────────────────────────────────────────
 const STATS = [
-    { num: "120+", label: "Turnamen digelar" },
-    { num: "850+", label: "Tim terdaftar" },
-    { num: "3.200+", label: "Pemain aktif" },
-    { num: "15+", label: "Jenis game" },
+    { num: "120+", label: "Turnamen digelar", icon: Gamepad2 },
+    { num: "850+", label: "Tim terdaftar", icon: Users },
+    { num: "3.200+", label: "Pemain aktif", icon: UserCheck },
+    { num: "15+", label: "Jenis game", icon: Flame },
 ];
 
 function StatsBar() {
@@ -233,25 +272,31 @@ function StatsBar() {
             borderBottom: "0.5px solid #1a3d30",
             background: "#0a1a14",
         }}>
-            {STATS.map((s, i) => (
-                <div key={i} style={{
-                    padding: "1.5rem", textAlign: "center",
-                    borderRight: i < STATS.length - 1 ? "0.5px solid #1a3d30" : "none",
-                }}>
-                    <div style={{ fontSize: 24, fontWeight: 600, color: "#1a9e75" }}>{s.num}</div>
-                    <div style={{ fontSize: 13, color: "#7ab89e", marginTop: 4 }}>{s.label}</div>
-                </div>
-            ))}
+            {STATS.map((s, i) => {
+                const IconComponent = s.icon; // Ambil komponen ikonnya
+                return (
+                    <div key={i} style={{
+                        padding: "1.5rem", textAlign: "center",
+                        borderRight: i < STATS.length - 1 ? "0.5px solid #1a3d30" : "none",
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+                    }}>
+                        {/* Ikon Lucide kecil di atas angka statistik */}
+                        <IconComponent size={20} color="#1a9e75" style={{ marginBottom: 6 }} />
+                        <div style={{ fontSize: 24, fontWeight: 600, color: "#1a9e75" }}>{s.num}</div>
+                        <div style={{ fontSize: 13, color: "#7ab89e", marginTop: 4 }}>{s.label}</div>
+                    </div>
+                );
+            })}
         </div>
     );
 }
 
 // ── Features ──────────────────────────────────────────────────────────────────
 const FEATURES = [
-    { icon: "🏆", title: "Bracket otomatis", desc: "Generate bracket single/double elimination secara otomatis begitu pendaftaran ditutup." },
-    { icon: "👥", title: "Manajemen tim", desc: "Daftarkan tim, kelola roster pemain, dan pantau performa di setiap pertandingan." },
-    { icon: "💰", title: "Pembayaran terintegrasi", desc: "Kelola biaya pendaftaran dan distribusi hadiah langsung dari dashboard." },
-    { icon: "📊", title: "Statistik real-time", desc: "Pantau pendaftaran, hasil match, dan pendapatan langsung dari MongoDB Atlas." },
+    { icon: Trophy, title: "Bracket otomatis", desc: "Generate bracket single/double elimination secara otomatis begitu pendaftaran ditutup." },
+    { icon: Users, title: "Manajemen tim", desc: "Daftarkan tim, kelola roster pemain, dan pantau performa di setiap pertandingan." },
+    { icon: Wallet, title: "Pembayaran terintegrasi", desc: "Kelola biaya pendaftaran dan distribusi hadiah langsung dari dashboard." },
+    { icon: BarChart3, title: "Statistik real-time", desc: "Pantau pendaftaran, hasil match, dan pendapatan langsung dari MongoDB Atlas." },
 ];
 
 function Features() {
@@ -268,21 +313,27 @@ function Features() {
                 gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                 gap: 16, maxWidth: 900, margin: "0 auto",
             }}>
-                {FEATURES.map((f, i) => (
-                    <div key={i} style={{
-                        background: "#0a1a14", border: "0.5px solid #1a3d30",
-                        borderRadius: 12, padding: "1.25rem",
-                    }}>
-                        <div style={{
-                            width: 40, height: 40, borderRadius: 8,
-                            background: "rgba(26,158,117,0.15)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 20, marginBottom: 12,
-                        }}>{f.icon}</div>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, color: "#f0faf6", marginBottom: 6 }}>{f.title}</h3>
-                        <p style={{ fontSize: 13, color: "#7ab89e", lineHeight: 1.6 }}>{f.desc}</p>
-                    </div>
-                ))}
+                {FEATURES.map((f, i) => {
+                    const IconComponent = f.icon; // Ambil komponen ikonnya
+                    return (
+                        <div key={i} style={{
+                            background: "#0a1a14", border: "0.5px solid #1a3d30",
+                            borderRadius: 12, padding: "1.25rem",
+                        }}>
+                            <div style={{
+                                width: 40, height: 40, borderRadius: 8,
+                                background: "rgba(26,158,117,0.15)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                marginBottom: 12,
+                            }}>
+                                {/* Ganti emoji kaku pake ikon Lucide premium */}
+                                <IconComponent size={18} color="#4dd6a3" />
+                            </div>
+                            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#f0faf6", marginBottom: 6 }}>{f.title}</h3>
+                            <p style={{ fontSize: 13, color: "#7ab89e", lineHeight: 1.6 }}>{f.desc}</p>
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );

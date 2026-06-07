@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Tambahin import Link untuk navigasi bracket
 import {
   Trophy, Plus, Eye, Edit3, Trash2, X, Save,
   Loader2, Search, ChevronLeft, Swords, LayoutDashboard,
@@ -67,7 +67,7 @@ export default function TournamentsPage() {
     setSaving(true);
     try {
       if (editData) {
-        await axios.put(`${API_BASE}/tournaments/${editData.id}`, form);
+        await axios.put(`${API_BASE}/tournaments/${editData.id || editData._id}`, form);
       } else {
         await axios.post(`${API_BASE}/tournaments`, form);
       }
@@ -182,7 +182,7 @@ export default function TournamentsPage() {
                     {filtered.map(t => {
                       const sc = statusConfig[t.status] ?? statusConfig.open;
                       return (
-                        <tr key={t.id} className="hover:bg-white/[0.025] transition-colors group">
+                        <tr key={t.id || t._id} className="hover:bg-white/[0.025] transition-colors group">
                           <td className="px-5 py-4">
                             <p className="font-semibold text-white group-hover:text-emerald-300 transition-colors">{t.name}</p>
                             <p className="text-xs text-gray-600 mt-0.5">Mulai: {t.start_date}</p>
@@ -202,10 +202,15 @@ export default function TournamentsPage() {
                           </td>
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-1.5">
+                              {/* ── TOMBOL LIHAT BAGAN BARU ── */}
+                              <Link to={`/tournaments/${t._id || t.id}/bracket`} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-emerald-400 transition-colors" title="Lihat Bagan Pertandingan">
+                                <Eye size={15} />
+                              </Link>
+                              
                               <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-amber-400 transition-colors" title="Edit">
                                 <Edit3 size={15} />
                               </button>
-                              <button onClick={() => setDeleteId(t.id)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-rose-400 transition-colors" title="Hapus">
+                              <button onClick={() => setDeleteId(t.id || t._id)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-rose-400 transition-colors" title="Hapus">
                                 <Trash2 size={15} />
                               </button>
                             </div>

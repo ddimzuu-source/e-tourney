@@ -8,16 +8,16 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserController;
 
-// Auth
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/me', [AuthController::class, 'me']);
 
-// Dashboard
+
 Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 Route::get('/dashboard/recent-registrations', [DashboardController::class, 'recentRegistrations']);
 
-// Resources - public untuk presentasi
+Route::get('/tournaments/{id}/bracket', [App\Http\Controllers\Api\TournamentController::class, 'getBracket']);
 Route::apiResource('tournaments', TournamentController::class);
 Route::apiResource('teams', TeamController::class);
 Route::apiResource('payments', PaymentController::class);

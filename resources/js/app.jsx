@@ -13,6 +13,7 @@ import UsersPage         from './components/UsersPage';
 import SettingsPage      from './components/SettingsPage';
 import UserDashboardPage from './components/UserDashboardPage';
 import HomePage from './components/HomePage';
+import TournamentBracketPage from "./components/TournamentBracketPage";
 
 // Set axios default
 axios.defaults.baseURL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api";
@@ -58,6 +59,7 @@ root.render(
         <Route path="/users"       element={<AdminRoute><UsersPage /></AdminRoute>} />
         <Route path="/settings"    element={<AdminRoute><SettingsPage /></AdminRoute>} />
         <Route path="/landing" element={<HomePage />} />
+        <Route path="/tournaments/:id/bracket" element={<TournamentBracketPage />} />
 
         {/* Peserta */}
         <Route path="/home" element={<PrivateRoute><UserDashboardPage /></PrivateRoute>} />

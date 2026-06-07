@@ -38,6 +38,8 @@ export default function UserDashboardPage() {
   const [saving, setSaving]             = useState(false);
   const [notif, setNotif]               = useState("");
   const [currentUser, setCurrentUser]   = useState(null);
+  const [proofFile, setProofFile]       = useState(null);
+  const [proofPreview, setProofPreview] = useState(null);
 
   useEffect(() => {
     api.get("/me")
@@ -77,15 +79,9 @@ export default function UserDashboardPage() {
   const handleDaftar = (t) => {
     console.log("Data turnamen yang diklik:", t);
     setSelectedTournament(t);
-    
-    // Amankan penangkapan ID turnamen dari MongoDB
     const targetId = t.id || t._id || t.id_tournament || (t.$oid ? t.$oid : "");
     console.log("ID turnamen yang berhasil ditangkap:", targetId);
-
-    setTeamForm({ 
-      ...EMPTY_TEAM_FORM, 
-      tournament_id: targetId 
-    });
+    setTeamForm({ ...EMPTY_TEAM_FORM, tournament_id: targetId });
     setShowTeamModal(true);
   };
 
@@ -101,9 +97,9 @@ export default function UserDashboardPage() {
         ? teamForm.members.split(",").map(m => m.trim()).filter(Boolean)
         : [];
 
-     const cleanTournamentId = String(teamForm.tournament_id);
-     const cleanCaptainId    = String(rawCaptainId);
-     
+      const cleanTournamentId = String(teamForm.tournament_id);
+      const cleanCaptainId    = String(rawCaptainId);
+
       const jsonPayload = {
         name: teamForm.name.trim(),
         tournament_id: cleanTournamentId,
@@ -127,6 +123,41 @@ export default function UserDashboardPage() {
       console.error(err);
       const errorMsg = err.response?.data?.message || "Gagal mendaftarkan tim.";
       showNotif(`❌ ${errorMsg}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleProofChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProofFile(file);
+    setProofPreview(URL.createObjectURL(file));
+  };
+
+  const handlePayment = async () => {
+    if (!proofFile) return showNotif("❌ Upload bukti transfer dulu!");
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("team_id", payForm.team_id);
+      formData.append("tournament_id", payForm.tournament_id);
+      formData.append("amount", 10000);
+      formData.append("payment_method", "qris");
+      formData.append("proof", proofFile);
+
+      await api.post("/payments", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      fetchAll();
+      setShowPayModal(false);
+      setProofFile(null);
+      setProofPreview(null);
+      showNotif("✅ Konfirmasi pembayaran terkirim! Menunggu verifikasi admin.");
+    } catch (err) {
+      console.error(err);
+      showNotif("❌ Gagal mengirim konfirmasi.");
     } finally {
       setSaving(false);
     }
@@ -165,7 +196,7 @@ export default function UserDashboardPage() {
 
       {notif && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-neutral-900 border border-white/10 text-sm">{notif}</div>}
 
-      {/* Konten Utama Berdasarkan Tab */}
+      {/* Konten Utama */}
       <main className="pt-24 pb-20 max-w-2xl mx-auto px-4">
         {/* TAB 1: BERANDA */}
         {activeTab === "home" && (
@@ -218,10 +249,11 @@ export default function UserDashboardPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${sc.bg} ${sc.text} ${sc.border}`}>{sc.label}</span>
-                    {/* Tombol Bayar muncul jika status pendaftaran disetujui admin */}
                     {t.status === "approved" && (
                       <button onClick={() => { 
                         setPayForm({ ...EMPTY_PAY_FORM, team_id: t.id || t._id, tournament_id: t.tournament_id });
+                        setProofFile(null);
+                        setProofPreview(null);
                         setShowPayModal(true); 
                       }} className="px-3 py-1 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-xs font-bold transition-colors">
                         Bayar
@@ -292,21 +324,19 @@ export default function UserDashboardPage() {
         </div>
       )}
 
-      {/* Modal Pembayaran QRIS (.jpeg) */}
+      {/* Modal Pembayaran */}
       {showPayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-[#111113] border border-white/10 rounded-2xl w-full max-w-sm p-5 text-center space-y-4">
             <div className="flex justify-between items-center text-left">
               <h2 className="text-base font-bold text-white">Pembayaran Turnamen</h2>
-              <button onClick={() => setShowPayModal(false)} className="text-gray-500 hover:text-white"><X size={18} /></button>
+              <button onClick={() => { setShowPayModal(false); setProofFile(null); setProofPreview(null); }} className="text-gray-500 hover:text-white"><X size={18} /></button>
             </div>
             
             <p className="text-xs text-gray-400">Silakan scan kode QRIS di bawah ini menggunakan aplikasi e-wallet kamu untuk menyelesaikan pembayaran pendaftaran.</p>
             
-            {/* Memanggil file qris.jpeg di dalam folder public/images/ */}
             <div className="bg-white p-3 rounded-xl inline-block mx-auto border-4 border-violet-500/20">
               <img src="/images/qris.jpeg" alt="QRIS Pembayaran" className="w-48 h-48 object-contain mx-auto" onError={(e) => {
-                // Fallback otomatis jika file jpeg lokal tidak terbaca
                 e.target.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ETOURNEY-QRIS-PAYMENT";
               }} />
             </div>
@@ -316,25 +346,31 @@ export default function UserDashboardPage() {
               <p className="text-xs font-bold text-violet-400 uppercase mt-0.5">QRIS / ALL E-WALLET</p>
             </div>
 
-            <button onClick={async () => {
-              setSaving(true);
-              try {
-                await api.post("/payments", {
-                  team_id: payForm.team_id,
-                  tournament_id: payForm.tournament_id,
-                  amount: 10000, 
-                  payment_method: "qris"
-                });
-                fetchAll();
-                setShowPayModal(false);
-                showNotif("✅ Konfirmasi pembayaran terkirim! Menunggu verifikasi admin.");
-              } catch (err) {
-                showNotif("❌ Gagal mengirim konfirmasi.");
-              } finally {
-                setSaving(false);
-              }
-            }} className="w-full py-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500/30 transition-colors">
-              Saya Sudah Transfer
+            {/* Upload Bukti Transfer */}
+            <div className="text-left space-y-2">
+              <label className="block text-xs text-gray-400">Upload Bukti Transfer <span className="text-rose-400">*</span></label>
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-emerald-500/50 transition-colors bg-white/5">
+                {proofPreview ? (
+                  <img src={proofPreview} alt="Preview" className="h-full w-full object-contain rounded-xl p-1" />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500">Klik untuk upload foto bukti transfer</p>
+                    <p className="text-[10px] text-gray-600 mt-1">JPG, JPEG, PNG — max 5MB</p>
+                  </div>
+                )}
+                <input type="file" accept="image/jpg,image/jpeg,image/png" onChange={handleProofChange} className="hidden" />
+              </label>
+              {proofFile && (
+                <p className="text-xs text-emerald-400">✅ {proofFile.name}</p>
+              )}
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={saving || !proofFile}
+              className="w-full py-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500/30 transition-colors disabled:opacity-40"
+            >
+              {saving ? "Mengirim..." : "Saya Sudah Transfer"}
             </button>
           </div>
         </div>
@@ -343,9 +379,9 @@ export default function UserDashboardPage() {
       {/* Tabs Menu Bawah */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#0d0d0f]/95 backdrop-blur border-t border-white/5 flex">
         {[
-          { id: "home",      label: "Beranda",   icon: Gamepad2   },
-          { id: "teams",     label: "Tim Saya",  icon: Shield     },
-          { id: "payments",  label: "Transaksi", icon: CreditCard }, // Balik dengan gagah berani!
+          { id: "home",     label: "Beranda",   icon: Gamepad2  },
+          { id: "teams",    label: "Tim Saya",  icon: Shield    },
+          { id: "payments", label: "Transaksi", icon: CreditCard },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setActiveTab(id)} className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === id ? "text-emerald-400" : "text-gray-600"}`}>
             <Icon size={20} />

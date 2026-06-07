@@ -53,7 +53,7 @@ export default function UsersPage() {
   const fetchUsers = () => {
     setLoading(true);
     axios.get(`${API_BASE}/users`)
-      .then(res => setUsers(res.data))
+      .then (res => setUsers(Array.isArray(res.data) ? res.data : res.data.data ?? []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   };
