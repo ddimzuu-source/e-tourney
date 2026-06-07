@@ -19,7 +19,7 @@ class TeamController extends Controller
     {
         $validated = $request->validate([
             'name'          => 'required|string',
-            'tournament_id' => 'required|numeric',
+            'tournament_id' => 'required|string',
             'captain_id'    => 'required|string',
             'members'       => 'required|array',
         ]);
