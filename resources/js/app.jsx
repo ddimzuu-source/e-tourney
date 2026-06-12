@@ -36,7 +36,7 @@ const AdminRoute = ({ children }) => {
 };
 
 const RootRedirect = () => {
-  if (!isLogged()) return <Navigate to="/login" replace />;
+  if (!isLogged()) return <Navigate to="/landing" replace />;
   return getRole() === 'peserta'
     ? <Navigate to="/home" replace />
     : <Navigate to="/dashboard" replace />;
