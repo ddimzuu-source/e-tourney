@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom"; // Tambahin import Link untuk navigasi bracket
+import { useNavigate, Link } from "react-router-dom";
 import {
   Trophy, Plus, Eye, Edit3, Trash2, X, Save,
   Loader2, Search, ChevronLeft, Swords, LayoutDashboard,
@@ -29,6 +29,22 @@ const EMPTY_FORM = {
   name: "", game: "", game_tag: "", max_teams: "",
   registration_fee: "", prize: "", start_date: "",
   end_date: "", status: "open", description: "",
+  min_members: "",
+};
+
+// Preset min_members berdasarkan game populer
+const GAME_PRESETS = {
+  "mobile legends": 5,
+  "mlbb": 5,
+  "valorant": 5,
+  "free fire": 4,
+  "ff": 4,
+  "pubg mobile": 4,
+  "pubg": 4,
+  "efootball": 1,
+  "e-football": 1,
+  "fifa": 1,
+  "chess": 1,
 };
 
 export default function TournamentsPage() {
@@ -43,7 +59,6 @@ export default function TournamentsPage() {
   const [saving, setSaving]           = useState(false);
   const [deleteId, setDeleteId]       = useState(null);
 
-  // Fetch tournaments
   const fetchTournaments = () => {
     setLoading(true);
     axios.get(`${API_BASE}/tournaments`)
@@ -63,13 +78,24 @@ export default function TournamentsPage() {
   const openEdit   = (t) => { setForm({ ...EMPTY_FORM, ...t }); setEditData(t); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditData(null); setForm(EMPTY_FORM); };
 
+  // Auto-fill min_members berdasarkan nama game
+  const handleGameChange = (value) => {
+    const preset = GAME_PRESETS[value.toLowerCase()];
+    setForm(prev => ({
+      ...prev,
+      game: value,
+      min_members: preset ? String(preset) : prev.min_members,
+    }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = { ...form, min_members: form.min_members ? Number(form.min_members) : null };
       if (editData) {
-        await axios.put(`${API_BASE}/tournaments/${editData.id || editData._id}`, form);
+        await axios.put(`${API_BASE}/tournaments/${editData.id || editData._id}`, payload);
       } else {
-        await axios.post(`${API_BASE}/tournaments`, form);
+        await axios.post(`${API_BASE}/tournaments`, payload);
       }
       fetchTournaments();
       closeModal();
@@ -132,7 +158,6 @@ export default function TournamentsPage() {
     <div className="min-h-screen bg-[#0a0a0c] text-white">
       <Sidebar />
 
-      {/* Header */}
       <header className={`fixed top-0 right-0 z-20 h-16 flex items-center gap-4 px-5 bg-[#0d0d0f]/90 backdrop-blur border-b border-white/5 transition-all duration-300 ${sidebarOpen ? "left-64" : "left-16"}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500 hover:text-white p-1.5 rounded-lg hover:bg-white/5">
           <Menu size={20} />
@@ -149,7 +174,6 @@ export default function TournamentsPage() {
         </button>
       </header>
 
-      {/* Main */}
       <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"}`}>
         <div className="p-6 max-w-screen-2xl mx-auto">
           <div className="mb-6">
@@ -157,7 +181,6 @@ export default function TournamentsPage() {
             <p className="text-sm text-gray-500 mt-1">{filtered.length} turnamen ditemukan</p>
           </div>
 
-          {/* Table */}
           <div className="bg-[#111113] border border-white/5 rounded-xl overflow-hidden">
             {loading ? (
               <div className="flex items-center justify-center py-20 gap-3 text-gray-500">
@@ -173,7 +196,7 @@ export default function TournamentsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/5">
-                      {["Nama Turnamen", "Game", "Slot", "Biaya Daftar", "Hadiah", "Status", "Aksi"].map(h => (
+                      {["Nama Turnamen", "Game", "Slot", "Min. Anggota", "Biaya Daftar", "Hadiah", "Status", "Aksi"].map(h => (
                         <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -185,11 +208,25 @@ export default function TournamentsPage() {
                         <tr key={t.id || t._id} className="hover:bg-white/[0.025] transition-colors group">
                           <td className="px-5 py-4">
                             <p className="font-semibold text-white group-hover:text-emerald-300 transition-colors">{t.name}</p>
-                            <p className="text-xs text-gray-600 mt-0.5">Mulai: {t.start_date}</p>
+                            <p className="text-xs text-gray-600 mt-0.5">Mulai: {t.start_date} · Hadiah: {t.prize ?? "-"}</p>
                           </td>
-                          <td className="px-5 py-4 text-gray-300">{t.game}</td>
+                          <td className="px-5 py-4">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              {t.game_tag ?? t.game}
+                            </span>
+                            <p className="text-xs text-gray-600 mt-1">{t.game}</p>
+                          </td>
                           <td className="px-5 py-4">
                             <span className="text-white font-semibold">{t.slots_used ?? 0}/{t.max_teams}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            {t.min_members ? (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                {t.min_members} orang
+                              </span>
+                            ) : (
+                              <span className="text-gray-600 text-xs">—</span>
+                            )}
                           </td>
                           <td className="px-5 py-4 text-gray-300">
                             Rp {Number(t.registration_fee || 0).toLocaleString("id-ID")}
@@ -202,11 +239,9 @@ export default function TournamentsPage() {
                           </td>
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-1.5">
-                              {/* ── TOMBOL LIHAT BAGAN BARU ── */}
-                              <Link to={`/tournaments/${t._id || t.id}/bracket`} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-emerald-400 transition-colors" title="Lihat Bagan Pertandingan">
+                              <Link to={`/tournaments/${t._id || t.id}/bracket`} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-emerald-400 transition-colors" title="Lihat Bagan">
                                 <Eye size={15} />
                               </Link>
-                              
                               <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-amber-400 transition-colors" title="Edit">
                                 <Edit3 size={15} />
                               </button>
@@ -235,23 +270,75 @@ export default function TournamentsPage() {
               <button onClick={closeModal} className="text-gray-500 hover:text-white p-1"><X size={18} /></button>
             </div>
             <div className="p-6 space-y-4">
-              {[
-                { label: "Nama Turnamen", key: "name", type: "text", placeholder: "MLBB Pro League" },
-                { label: "Game", key: "game", type: "text", placeholder: "Mobile Legends" },
-                { label: "Game Tag", key: "game_tag", type: "text", placeholder: "MLBB" },
-                { label: "Max Tim", key: "max_teams", type: "number", placeholder: "32" },
-                { label: "Biaya Pendaftaran (Rp)", key: "registration_fee", type: "number", placeholder: "150000" },
-                { label: "Hadiah", key: "prize", type: "text", placeholder: "Rp 10.000.000" },
-                { label: "Tanggal Mulai", key: "start_date", type: "date" },
-                { label: "Tanggal Selesai", key: "end_date", type: "date" },
-              ].map(({ label, key, type, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">{label}</label>
-                  <input type={type} value={form[key] ?? ""} onChange={e => setForm({ ...form, [key]: e.target.value })}
-                    placeholder={placeholder}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+              {/* Nama */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Nama Turnamen</label>
+                <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                  placeholder="FREE FIRE CHAMP" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+              </div>
+
+              {/* Game — auto-fill min_members */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Game</label>
+                <input type="text" value={form.game} onChange={e => handleGameChange(e.target.value)}
+                  placeholder="Free Fire" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+              </div>
+
+              {/* Game Tag */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1.5">Game Tag</label>
+                <input type="text" value={form.game_tag} onChange={e => setForm({ ...form, game_tag: e.target.value })}
+                  placeholder="FF" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+              </div>
+
+              {/* Min Members + Max Teams side by side */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+                    Min. Anggota Tim
+                    <span className="ml-1 text-cyan-400">(validasi daftar)</span>
+                  </label>
+                  <input type="number" min="1" value={form.min_members} onChange={e => setForm({ ...form, min_members: e.target.value })}
+                    placeholder="5"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50" />
+                  <p className="text-xs text-gray-600 mt-1">MLBB=5, FF=4, Valorant=5</p>
                 </div>
-              ))}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Max Tim</label>
+                  <input type="number" value={form.max_teams} onChange={e => setForm({ ...form, max_teams: e.target.value })}
+                    placeholder="8" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+                </div>
+              </div>
+
+              {/* Biaya + Hadiah */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Biaya Pendaftaran (Rp)</label>
+                  <input type="number" value={form.registration_fee} onChange={e => setForm({ ...form, registration_fee: e.target.value })}
+                    placeholder="10000" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Hadiah</label>
+                  <input type="text" value={form.prize} onChange={e => setForm({ ...form, prize: e.target.value })}
+                    placeholder="Rp 1.000.000" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+                </div>
+              </div>
+
+              {/* Tanggal */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tanggal Mulai</label>
+                  <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tanggal Selesai</label>
+                  <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50" />
+                </div>
+              </div>
+
+              {/* Status */}
               <div>
                 <label className="block text-xs font-semibold text-gray-400 mb-1.5">Status</label>
                 <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
@@ -262,6 +349,8 @@ export default function TournamentsPage() {
                   <option value="finished">Finished</option>
                 </select>
               </div>
+
+              {/* Deskripsi */}
               <div>
                 <label className="block text-xs font-semibold text-gray-400 mb-1.5">Deskripsi</label>
                 <textarea value={form.description ?? ""} onChange={e => setForm({ ...form, description: e.target.value })}

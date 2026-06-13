@@ -21,5 +21,6 @@ class Tournament extends Model
         'prize',
         'status',
         'challonge_id',
+        'min_members',
     ];
 }

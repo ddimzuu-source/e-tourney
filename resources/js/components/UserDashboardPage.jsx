@@ -3,7 +3,7 @@ import api from "./api";
 import { useNavigate } from "react-router-dom";
 import {
   Trophy, Shield, CreditCard, Search, LogOut,
-  Swords, Plus, X, Medal, Gamepad2
+  Swords, X, Medal, Gamepad2
 } from "lucide-react";
 
 const statusConfig = {
@@ -77,52 +77,54 @@ export default function UserDashboardPage() {
   };
 
   const handleDaftar = (t) => {
-    console.log("Data turnamen yang diklik:", t);
     setSelectedTournament(t);
     const targetId = t.id || t._id || t.id_tournament || (t.$oid ? t.$oid : "");
-    console.log("ID turnamen yang berhasil ditangkap:", targetId);
     setTeamForm({ ...EMPTY_TEAM_FORM, tournament_id: targetId });
     setShowTeamModal(true);
   };
+
+  const getMemberCount = () =>
+    teamForm.members
+      ? teamForm.members.split(",").map(m => m.trim()).filter(Boolean).length
+      : 0;
 
   const handleSaveTeam = async () => {
     if (!teamForm.name.trim()) return showNotif("❌ Nama tim kosong!");
     if (!teamForm.tournament_id) return showNotif("❌ Turnamen belum dipilih!");
 
-    let rawCaptainId = currentUser?.id || currentUser?.user?.id || currentUser?.data?.id || currentUser?._id || "1"; 
+    if (selectedTournament?.min_members) {
+      const count = getMemberCount();
+      const min   = Number(selectedTournament.min_members);
+      if (count < min) {
+        return showNotif(`❌ ${selectedTournament.game} butuh minimal ${min} anggota. Baru ${count} orang.`);
+      }
+    }
+
+    let rawCaptainId = currentUser?.id || currentUser?.user?.id || currentUser?.data?.id || currentUser?._id || "1";
 
     setSaving(true);
     try {
-      const cleanMembersArray = teamForm.members 
+      const cleanMembersArray = teamForm.members
         ? teamForm.members.split(",").map(m => m.trim()).filter(Boolean)
         : [];
 
-      const cleanTournamentId = String(teamForm.tournament_id);
-      const cleanCaptainId    = String(rawCaptainId);
-
-      const jsonPayload = {
-        name: teamForm.name.trim(),
-        tournament_id: cleanTournamentId,
-        captain_id: cleanCaptainId,
-        members: cleanMembersArray 
-      };
-
-      await api.post("/teams", jsonPayload, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+      await api.post("/teams", {
+        name:          teamForm.name.trim(),
+        tournament_id: String(teamForm.tournament_id),
+        captain_id:    String(rawCaptainId),
+        members:       cleanMembersArray,
+      }, {
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       });
 
       fetchAll();
       setShowTeamModal(false);
       setSelectedTournament(null);
-      setTeamForm(EMPTY_TEAM_FORM); 
+      setTeamForm(EMPTY_TEAM_FORM);
       showNotif("✅ Tim berhasil didaftarkan!");
     } catch (err) {
       console.error(err);
-      const errorMsg = err.response?.data?.message || "Gagal mendaftarkan tim.";
-      showNotif(`❌ ${errorMsg}`);
+      showNotif(`❌ ${err.response?.data?.message || "Gagal mendaftarkan tim."}`);
     } finally {
       setSaving(false);
     }
@@ -140,11 +142,11 @@ export default function UserDashboardPage() {
     setSaving(true);
     try {
       const formData = new FormData();
-      formData.append("team_id", payForm.team_id);
-      formData.append("tournament_id", payForm.tournament_id);
-      formData.append("amount", 10000);
+      formData.append("team_id",        payForm.team_id);
+      formData.append("tournament_id",  payForm.tournament_id);
+      formData.append("amount",         10000);
       formData.append("payment_method", "qris");
-      formData.append("proof", proofFile);
+      formData.append("proof",          proofFile);
 
       await api.post("/payments", formData, {
         headers: { "Content-Type": "multipart/form-data" }
@@ -174,9 +176,11 @@ export default function UserDashboardPage() {
     t.game?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const memberCount = getMemberCount();
+  const minMembers  = Number(selectedTournament?.min_members ?? 0);
+
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white">
-      {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-30 h-16 flex items-center gap-4 px-5 bg-[#0d0d0f]/95 backdrop-blur border-b border-white/5">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
@@ -196,9 +200,8 @@ export default function UserDashboardPage() {
 
       {notif && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-neutral-900 border border-white/10 text-sm">{notif}</div>}
 
-      {/* Konten Utama */}
       <main className="pt-24 pb-20 max-w-2xl mx-auto px-4">
-        {/* TAB 1: BERANDA */}
+
         {activeTab === "home" && (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
@@ -221,12 +224,26 @@ export default function UserDashboardPage() {
 
             <div className="space-y-3">
               {filteredTournaments.map(t => (
-                <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-white">{t.name}</h4>
-                    <p className="text-xs text-gray-500">Rp {Number(t.registration_fee || 0).toLocaleString("id-ID")}</p>
+                <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-bold text-white">{t.name}</h4>
+                      <p className="text-xs text-gray-500">{t.game} · Rp {Number(t.registration_fee || 0).toLocaleString("id-ID")}</p>
+                    </div>
+                    <button onClick={() => handleDaftar(t)} className="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                      Daftar
+                    </button>
                   </div>
-                  <button onClick={() => handleDaftar(t)} className="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Daftar</button>
+                  <div className="flex gap-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                      👥 {t.slots_used ?? 0}/{t.max_teams} slot
+                    </span>
+                    {t.min_members && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        Min. {t.min_members} anggota/tim
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
               {filteredTournaments.length === 0 && (
@@ -236,7 +253,6 @@ export default function UserDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: TIM SAYA */}
         {activeTab === "teams" && (
           <div className="space-y-3">
             {myTeams.map(t => {
@@ -250,11 +266,11 @@ export default function UserDashboardPage() {
                   <div className="flex items-center gap-2">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${sc.bg} ${sc.text} ${sc.border}`}>{sc.label}</span>
                     {t.status === "approved" && (
-                      <button onClick={() => { 
+                      <button onClick={() => {
                         setPayForm({ ...EMPTY_PAY_FORM, team_id: t.id || t._id, tournament_id: t.tournament_id });
                         setProofFile(null);
                         setProofPreview(null);
-                        setShowPayModal(true); 
+                        setShowPayModal(true);
                       }} className="px-3 py-1 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-xs font-bold transition-colors">
                         Bayar
                       </button>
@@ -269,7 +285,6 @@ export default function UserDashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: TRANSAKSI */}
         {activeTab === "payments" && (
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-400 mb-2">Riwayat Transaksi Kamu</h3>
@@ -279,7 +294,7 @@ export default function UserDashboardPage() {
                   <p className="text-xs text-gray-400">ID Tim: {p.team_id}</p>
                   <p className="text-sm font-bold text-white mt-1">Rp {Number(p.amount || 10000).toLocaleString("id-ID")}</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${p.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${p.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400' : p.status === 'rejected' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'}`}>
                   {p.status || 'pending'}
                 </span>
               </div>
@@ -307,17 +322,74 @@ export default function UserDashboardPage() {
               </button>
             </div>
 
+            {minMembers > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                <span className="text-lg">🎮</span>
+                <p className="text-xs text-cyan-400">
+                  <span className="font-bold">{selectedTournament?.game}</span> membutuhkan minimal{" "}
+                  <span className="font-bold">{minMembers} anggota</span> per tim
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs text-gray-400 mb-1">Nama Tim</label>
-              <input value={teamForm.name} onChange={e => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Masukkan nama tim kamu" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500" />
+              <input
+                value={teamForm.name}
+                onChange={e => setTeamForm({ ...teamForm, name: e.target.value })}
+                placeholder="Masukkan nama tim kamu"
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Anggota Tim</label>
-              <textarea value={teamForm.members} onChange={e => setTeamForm({ ...teamForm, members: e.target.value })} placeholder="Nama anggota, pisahkan dengan koma (contoh: Budi, Andi, Caca)" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white resize-none focus:outline-none focus:border-cyan-500" rows={3} />
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-gray-400">
+                  Anggota Tim
+                  {minMembers > 0 && (
+                    <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                      Min. {minMembers} orang
+                    </span>
+                  )}
+                </label>
+                {minMembers > 0 && (
+                  <span className={`text-xs font-bold ${memberCount >= minMembers ? "text-emerald-400" : "text-amber-400"}`}>
+                    {memberCount}/{minMembers}
+                  </span>
+                )}
+              </div>
+              <textarea
+                value={teamForm.members}
+                onChange={e => setTeamForm({ ...teamForm, members: e.target.value })}
+                placeholder={
+                  minMembers > 0
+                    ? `Masukkan minimal ${minMembers} nama anggota, pisahkan dengan koma`
+                    : "Nama anggota, pisahkan dengan koma (contoh: Budi, Andi, Caca)"
+                }
+                className={`w-full bg-white/5 border rounded-lg p-2 text-sm text-white resize-none focus:outline-none transition-colors ${
+                  minMembers > 0 && memberCount > 0
+                    ? memberCount >= minMembers
+                      ? "border-emerald-500/50 focus:border-emerald-500"
+                      : "border-amber-500/50 focus:border-amber-500"
+                    : "border-white/10 focus:border-cyan-500"
+                }`}
+                rows={3}
+              />
+              {minMembers > 0 && memberCount > 0 && (
+                <p className="text-xs mt-1">
+                  {memberCount >= minMembers
+                    ? <span className="text-emerald-400">✅ {memberCount} anggota — cukup!</span>
+                    : <span className="text-amber-400">⚠️ Kurang {minMembers - memberCount} orang lagi</span>
+                  }
+                </p>
+              )}
             </div>
 
-            <button onClick={handleSaveTeam} disabled={saving} className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-sm font-bold hover:bg-cyan-500/30 transition-colors disabled:opacity-40">
+            <button
+              onClick={handleSaveTeam}
+              disabled={saving || (minMembers > 0 && memberCount < minMembers)}
+              className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-sm font-bold hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               {saving ? "Menyimpan..." : "Simpan & Daftar"}
             </button>
           </div>
@@ -332,21 +404,16 @@ export default function UserDashboardPage() {
               <h2 className="text-base font-bold text-white">Pembayaran Turnamen</h2>
               <button onClick={() => { setShowPayModal(false); setProofFile(null); setProofPreview(null); }} className="text-gray-500 hover:text-white"><X size={18} /></button>
             </div>
-            
             <p className="text-xs text-gray-400">Silakan scan kode QRIS di bawah ini menggunakan aplikasi e-wallet kamu untuk menyelesaikan pembayaran pendaftaran.</p>
-            
             <div className="bg-white p-3 rounded-xl inline-block mx-auto border-4 border-violet-500/20">
               <img src="/images/qris.jpeg" alt="QRIS Pembayaran" className="w-48 h-48 object-contain mx-auto" onError={(e) => {
                 e.target.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ETOURNEY-QRIS-PAYMENT";
               }} />
             </div>
-
             <div className="bg-white/5 border border-white/5 rounded-lg p-3 text-left">
               <label className="block text-[10px] text-gray-500">Metode Pembayaran</label>
               <p className="text-xs font-bold text-violet-400 uppercase mt-0.5">QRIS / ALL E-WALLET</p>
             </div>
-
-            {/* Upload Bukti Transfer */}
             <div className="text-left space-y-2">
               <label className="block text-xs text-gray-400">Upload Bukti Transfer <span className="text-rose-400">*</span></label>
               <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-emerald-500/50 transition-colors bg-white/5">
@@ -360,11 +427,8 @@ export default function UserDashboardPage() {
                 )}
                 <input type="file" accept="image/jpg,image/jpeg,image/png" onChange={handleProofChange} className="hidden" />
               </label>
-              {proofFile && (
-                <p className="text-xs text-emerald-400">✅ {proofFile.name}</p>
-              )}
+              {proofFile && <p className="text-xs text-emerald-400">✅ {proofFile.name}</p>}
             </div>
-
             <button
               onClick={handlePayment}
               disabled={saving || !proofFile}
@@ -376,7 +440,6 @@ export default function UserDashboardPage() {
         </div>
       )}
 
-      {/* Tabs Menu Bawah */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#0d0d0f]/95 backdrop-blur border-t border-white/5 flex">
         {[
           { id: "home",     label: "Beranda",   icon: Gamepad2  },
