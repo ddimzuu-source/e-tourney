@@ -6,13 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Team;
  
 class PaymentController extends Controller
 {
     // GET /api/payments
     public function index()
     {
-        $payments = Payment::orderBy('created_at', 'desc')->get();
+        $user = auth('api')->user();
+ 
+        if (in_array($user?->role, ['admin', 'panitia'])) {
+            $payments = Payment::orderBy('created_at', 'desc')->get();
+        } else {
+            $teamIds = Team::where('captain_id', (string) $user?->id)
+                           ->get()
+                           ->map(fn($t) => (string) $t->id)
+                           ->toArray();
+ 
+            $payments = Payment::whereIn('team_id', $teamIds)
+                               ->orderBy('created_at', 'desc')
+                               ->get();
+        }
+ 
         return response()->json($payments);
     }
  
@@ -26,7 +41,7 @@ class PaymentController extends Controller
         return response()->json($payment);
     }
  
-    // POST /api/payments  (user submit bukti bayar)
+    // POST /api/payments
     public function store(Request $request)
     {
         $request->validate([
@@ -34,11 +49,10 @@ class PaymentController extends Controller
             'tournament_id'  => 'required|string',
             'amount'         => 'required|numeric',
             'payment_method' => 'nullable|string',
-            'proof'          => 'required|image|mimes:jpg,jpeg,png|max:5120', // max 5MB
+            'proof'          => 'required|image|mimes:jpg,jpeg,png|max:5120',
         ]);
  
-        // Simpan gambar bukti bayar
-        $path = $request->file('proof')->store('payments/proofs', 'public');
+        $path    = $request->file('proof')->store('payments/proofs', 'public');
         $proofUrl = Storage::url($path);
  
         $payment = Payment::create([
@@ -46,8 +60,8 @@ class PaymentController extends Controller
             'tournament_id'  => $request->tournament_id,
             'amount'         => $request->amount,
             'payment_method' => $request->payment_method ?? 'QRIS',
+            'proof'          => $path,
             'proof_url'      => $proofUrl,
-            'proof_path'     => $path,
             'status'         => 'pending',
             'paid_at'        => now(),
         ]);
@@ -59,7 +73,7 @@ class PaymentController extends Controller
         ], 201);
     }
  
-    // PUT /api/payments/{id}  (admin update status)
+    // PUT /api/payments/{id}
     public function update(Request $request, $id)
     {
         $payment = Payment::find($id);
@@ -88,7 +102,6 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment tidak ditemukan.'], 404);
         }
  
-        // Hapus file bukti jika ada
         if ($payment->proof_path) {
             Storage::disk('public')->delete($payment->proof_path);
         }
@@ -98,3 +111,4 @@ class PaymentController extends Controller
         return response()->json(['success' => true, 'message' => 'Payment berhasil dihapus.']);
     }
 }
+ 

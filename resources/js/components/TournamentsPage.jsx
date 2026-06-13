@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Sidebar from "./Sidebar";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -116,47 +117,11 @@ export default function TournamentsPage() {
     }
   };
 
-  const Sidebar = () => (
-    <aside className={`fixed top-0 left-0 h-screen z-30 flex flex-col bg-[#0d0d0f] border-r border-white/5 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-16"}`}>
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-white/5 shrink-0">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 shrink-0">
-          <Swords size={16} className="text-[#0d0d0f]" />
-        </div>
-        {sidebarOpen && <span className="text-white font-black tracking-wider text-lg">E<span className="text-emerald-400">-</span>TOURNEY</span>}
-      </div>
-      <nav className="flex-1 py-4 px-2 space-y-1">
-        {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-          const isActive = id === "/tournaments";
-          return (
-            <button key={id} onClick={() => navigate(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group relative ${isActive ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent"}`}>
-              {isActive && <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-emerald-400 rounded-full" />}
-              <Icon size={18} className="shrink-0" />
-              {sidebarOpen && <span className="text-sm font-medium">{label}</span>}
-            </button>
-          );
-        })}
-      </nav>
-      <div className="shrink-0 border-t border-white/5 p-3">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shrink-0">AD</div>
-          {sidebarOpen && (
-            <>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white">Admin Utama</p>
-                <p className="text-xs text-emerald-400">Administrator</p>
-              </div>
-              <button className="text-gray-600 hover:text-rose-400 p-1"><LogOut size={15} /></button>
-            </>
-          )}
-        </div>
-      </div>
-    </aside>
-  );
+ 
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white">
-      <Sidebar />
+      <Sidebar open={sidebarOpen} />
 
       <header className={`fixed top-0 right-0 z-20 h-16 flex items-center gap-4 px-5 bg-[#0d0d0f]/90 backdrop-blur border-b border-white/5 transition-all duration-300 ${sidebarOpen ? "left-64" : "left-16"}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-500 hover:text-white p-1.5 rounded-lg hover:bg-white/5">

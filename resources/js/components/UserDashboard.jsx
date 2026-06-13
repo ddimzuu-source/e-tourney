@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "./api"; 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Trophy, Shield, CreditCard, Search, LogOut,
-  Swords, X, Medal, Gamepad2
+  Swords, X, Medal, Gamepad2, Clock, CheckCircle
 } from "lucide-react";
 
 const statusConfig = {
@@ -25,6 +25,7 @@ const EMPTY_PAY_FORM  = { team_id: "", tournament_id: "", amount: "", payment_me
 export default function UserDashboardPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab]       = useState("home");
+  const [bracketFilter, setBracketFilter] = useState("ongoing");
   const [search, setSearch]             = useState("");
   const [tournaments, setTournaments]   = useState([]);
   const [myTeams, setMyTeams]           = useState([]);
@@ -176,11 +177,26 @@ export default function UserDashboardPage() {
     t.game?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Filter turnamen untuk tab bracket
+  const bracketTournaments = tournaments.filter(t => {
+    if (bracketFilter === "ongoing")  return t.status === "ongoing";
+    if (bracketFilter === "finished") return t.status === "finished";
+    if (bracketFilter === "upcoming") return t.status === "open" || t.status === "registration";
+    return true;
+  });
+
   const memberCount = getMemberCount();
   const minMembers  = Number(selectedTournament?.min_members ?? 0);
 
+  const BRACKET_FILTERS = [
+    { id: "ongoing",  label: "Berlangsung", icon: "🔴", color: "text-violet-400", activeBg: "bg-violet-500/20 border-violet-500/30" },
+    { id: "upcoming", label: "Akan Datang", icon: "🕐", color: "text-cyan-400",   activeBg: "bg-cyan-500/20 border-cyan-500/30"     },
+    { id: "finished", label: "Selesai",     icon: "✅", color: "text-gray-400",   activeBg: "bg-gray-500/20 border-gray-500/30"     },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white">
+      {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-30 h-16 flex items-center gap-4 px-5 bg-[#0d0d0f]/95 backdrop-blur border-b border-white/5">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
@@ -202,6 +218,7 @@ export default function UserDashboardPage() {
 
       <main className="pt-24 pb-20 max-w-2xl mx-auto px-4">
 
+        {/* TAB 1: BERANDA */}
         {activeTab === "home" && (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
@@ -243,6 +260,11 @@ export default function UserDashboardPage() {
                         Min. {t.min_members} anggota/tim
                       </span>
                     )}
+                    {t.status === "ongoing" && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 animate-pulse">
+                        🔴 Berlangsung
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -253,6 +275,7 @@ export default function UserDashboardPage() {
           </div>
         )}
 
+        {/* TAB 2: TIM SAYA */}
         {activeTab === "teams" && (
           <div className="space-y-3">
             {myTeams.map(t => {
@@ -285,6 +308,108 @@ export default function UserDashboardPage() {
           </div>
         )}
 
+        {/* TAB 3: BRACKET */}
+        {activeTab === "bracket" && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-base font-bold text-white mb-1">Bagan Turnamen</h2>
+              <p className="text-xs text-gray-500">Lihat bracket turnamen yang sedang berjalan, selesai, atau akan datang.</p>
+            </div>
+
+            {/* Filter */}
+            <div className="flex gap-2">
+              {BRACKET_FILTERS.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setBracketFilter(f.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    bracketFilter === f.id
+                      ? f.activeBg + " text-white"
+                      : "bg-transparent border-white/10 text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  <span>{f.icon}</span>
+                  {f.label}
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
+                    {tournaments.filter(t => {
+                      if (f.id === "ongoing")  return t.status === "ongoing";
+                      if (f.id === "finished") return t.status === "finished";
+                      if (f.id === "upcoming") return t.status === "open" || t.status === "registration";
+                      return false;
+                    }).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* List turnamen */}
+            <div className="space-y-3">
+              {bracketTournaments.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="text-4xl mb-3">
+                    {bracketFilter === "ongoing" ? "🎮" : bracketFilter === "finished" ? "🏆" : "📅"}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {bracketFilter === "ongoing"  ? "Belum ada turnamen yang sedang berlangsung"  :
+                     bracketFilter === "finished" ? "Belum ada turnamen yang selesai"             :
+                     "Belum ada turnamen yang akan datang"}
+                  </p>
+                </div>
+              ) : (
+                bracketTournaments.map(t => (
+                  <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-white">{t.name}</h4>
+                          {t.status === "ongoing" && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 animate-pulse">
+                              LIVE
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">{t.game} · {t.start_date}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        t.status === "ongoing"  ? "bg-violet-500/10 text-violet-400 border border-violet-500/20" :
+                        t.status === "finished" ? "bg-gray-500/10 text-gray-400 border border-gray-500/20"       :
+                        "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      }`}>
+                        {t.status === "ongoing" ? "Berlangsung" : t.status === "finished" ? "Selesai" : "Akan Datang"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                          👥 {t.slots_used ?? 0}/{t.max_teams} tim
+                        </span>
+                        {t.prize && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            🏆 Rp {Number(t.prize || 0).toLocaleString("id-ID")}
+                          </span>
+                        )}
+                      </div>
+
+                      {(t.status === "ongoing" || t.status === "finished") ? (
+                        <Link
+                          to={`/tournaments/${t._id || t.id}/bracket`}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
+                        >
+                          Lihat Bracket →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-gray-600">Bracket belum tersedia</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: TRANSAKSI */}
         {activeTab === "payments" && (
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-400 mb-2">Riwayat Transaksi Kamu</h3>
@@ -294,7 +419,11 @@ export default function UserDashboardPage() {
                   <p className="text-xs text-gray-400">ID Tim: {p.team_id}</p>
                   <p className="text-sm font-bold text-white mt-1">Rp {Number(p.amount || 10000).toLocaleString("id-ID")}</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${p.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400' : p.status === 'rejected' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                  p.status === 'paid'     ? 'bg-emerald-500/10 text-emerald-400' :
+                  p.status === 'rejected' ? 'bg-rose-500/10 text-rose-400'       :
+                  'bg-amber-500/10 text-amber-400'
+                }`}>
                   {p.status || 'pending'}
                 </span>
               </div>
@@ -440,15 +569,21 @@ export default function UserDashboardPage() {
         </div>
       )}
 
+      {/* Tabs Menu Bawah — 4 tab */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#0d0d0f]/95 backdrop-blur border-t border-white/5 flex">
         {[
           { id: "home",     label: "Beranda",   icon: Gamepad2  },
           { id: "teams",    label: "Tim Saya",  icon: Shield    },
+          { id: "bracket",  label: "Bracket",   icon: Swords    },
           { id: "payments", label: "Transaksi", icon: CreditCard },
         ].map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setActiveTab(id)} className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === id ? "text-emerald-400" : "text-gray-600"}`}>
+          <button key={id} onClick={() => setActiveTab(id)} className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative ${activeTab === id ? "text-emerald-400" : "text-gray-600"}`}>
             <Icon size={20} />
             <span className="text-[10px]">{label}</span>
+            {/* Dot notif untuk bracket ongoing */}
+            {id === "bracket" && tournaments.filter(t => t.status === "ongoing").length > 0 && (
+              <span className="absolute top-2 right-[calc(50%-12px)] w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            )}
           </button>
         ))}
       </nav>

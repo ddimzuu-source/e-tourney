@@ -12,7 +12,16 @@ class TeamController extends Controller
 {
     public function index(): JsonResponse
     {
-        $teams = Team::orderBy('created_at', 'desc')->get();
+        $user = auth('api')->user();
+ 
+        if (in_array($user?->role, ['admin', 'panitia'])) {
+            $teams = Team::orderBy('created_at', 'desc')->get();
+        } else {
+            $teams = Team::where('captain_id', (string) $user?->id)
+                         ->orderBy('created_at', 'desc')
+                         ->get();
+        }
+ 
         return response()->json($teams);
     }
  
@@ -25,7 +34,6 @@ class TeamController extends Controller
             'members'       => 'nullable|array',
         ]);
  
-        // ── Validasi jumlah anggota sesuai min_members turnamen ──────────────
         $tournament = Tournament::find($request->tournament_id);
  
         if ($tournament && isset($tournament->min_members)) {
@@ -34,15 +42,14 @@ class TeamController extends Controller
  
             if ($memberCount < $minMembers) {
                 return response()->json([
-                    'success' => false,
-                    'message' => "Tim {$tournament->game} membutuhkan minimal {$minMembers} anggota. Kamu baru memasukkan {$memberCount} anggota.",
-                    'min_members' => $minMembers,
+                    'success'       => false,
+                    'message'       => "Tim {$tournament->game} membutuhkan minimal {$minMembers} anggota. Kamu baru memasukkan {$memberCount} anggota.",
+                    'min_members'   => $minMembers,
                     'current_count' => $memberCount,
                 ], 422);
             }
         }
  
-        // ── Cek apakah slot turnamen masih tersedia ──────────────────────────
         if ($tournament) {
             $approvedCount = Team::where('tournament_id', $request->tournament_id)
                                  ->where('status', 'approved')
@@ -78,7 +85,6 @@ class TeamController extends Controller
  
         $team->update($request->all());
  
-        // ── Update slots_used di Tournament ──────────────────────────────────
         if ($oldStatus !== $newStatus && $team->tournament_id) {
             $tournament = Tournament::find($team->tournament_id);
             if ($tournament) {
@@ -112,35 +118,3 @@ class TeamController extends Controller
     }
 }
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

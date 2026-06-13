@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Trophy, BookOpen, Info, LogIn, Swords, Gamepad2, Users, UserCheck, Flame, Wallet, BarChart3 } from "lucide-react";
+import { 
+    Trophy, BookOpen, Info, LogIn, Swords, 
+    Gamepad2, Users, UserCheck, Flame, Wallet, BarChart3, 
+    Menu, X, MessageCircle 
+} from "lucide-react";
+
 // ── WhatsApp FAB ─────────────────────────────────────────────────────────────
 function WhatsAppFAB() {
     const [open, setOpen] = useState(false);
     const phone = "6282123052736";
-    const message = encodeURIComponent(
-        "Halo E-Tourney, saya ingin bertanya tentang turnamen"
-    );
+    const message = encodeURIComponent("Halo E-Tourney, saya ingin bertanya tentang turnamen");
     const waUrl = `https://wa.me/${phone}?text=${message}`;
 
+    // Tutup popup kalau user klik di luar area FAB
     useEffect(() => {
         const handler = (e) => {
             if (!e.target.closest("#wa-fab-root")) setOpen(false);
@@ -19,148 +23,108 @@ function WhatsAppFAB() {
     }, []);
 
     return (
-        <div id="wa-fab-root" style={{ position: "fixed", bottom: 24, right: 24, zIndex: 999 }}>
-            {open && (
-                <div style={{
-                    position: "absolute", bottom: 64, right: 0,
-                    background: "#fff", border: "1px solid #e5e7eb",
-                    borderRadius: 12, padding: "12px 16px", minWidth: 200,
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                }}>
-                    <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
-                        Ada pertanyaan? Chat kami!
-                    </p>
-                    <a
-                        href={waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            fontSize: 14, fontWeight: 500, color: "#25d366",
-                            textDecoration: "none", padding: "8px 12px",
-                            borderRadius: 8, background: "rgba(37,211,102,0.08)",
-                            border: "1px solid rgba(37,211,102,0.2)",
-                        }}
-                    >
-                        <WaIcon size={18} />
-                        Chat via WhatsApp
-                    </a>
-                </div>
-            )}
+        <div id="wa-fab-root" className="fixed bottom-6 right-6 z-50">
+            {/* Tooltip Chat */}
+            <div className={`absolute bottom-16 right-0 bg-white border border-gray-200 rounded-xl p-3 min-w-[200px] shadow-xl transition-all duration-300 origin-bottom-right ${open ? 'scale-100 opacity-100' : 'scale-90 opacity-0 pointer-events-none'}`}>
+                <p className="text-xs text-gray-500 mb-2 font-medium">Ada pertanyaan? Chat kami!</p>
+                <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm font-semibold text-[#25d366] bg-[#25d366]/10 border border-[#25d366]/20 py-2 px-3 rounded-lg hover:bg-[#25d366]/20 transition-colors"
+                >
+                    <MessageCircle size={18} />
+                    Chat via WhatsApp
+                </a>
+            </div>
+            
+            {/* Tombol Utama */}
             <button
                 onClick={() => setOpen((v) => !v)}
-                aria-label="Hubungi via WhatsApp"
-                style={{
-                    width: 52, height: 52, borderRadius: "50%",
-                    background: "#25d366", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 2px 12px rgba(37,211,102,0.4)",
-                    transition: "transform 0.15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                className="w-14 h-14 rounded-full bg-[#25d366] text-white flex items-center justify-center shadow-[0_4px_16px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform duration-200 active:scale-95"
             >
-                <WaIcon size={28} color="#fff" />
+                {open ? <X size={24} /> : <MessageCircle size={28} />}
             </button>
         </div>
     );
 }
 
-function WaIcon({ size = 24, color = "#25d366" }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.128.558 4.122 1.532 5.855L.057 23.882a.5.5 0 0 0 .611.611l6.087-1.461A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.947 0-3.76-.524-5.316-1.432l-.364-.214-3.865.928.956-3.789-.234-.38A9.96 9.96 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
-        </svg>
-    );
-}
-
 // ── Navbar ────────────────────────────────────────────────────────────────────
 function Navbar() {
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Efek shadow & blur saat halaman di-scroll
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     return (
-        <nav style={{
-            display: "flex", alignItems: "center", justifyBetween: "space-between",
-            justifyContent: "space-between",
-            padding: "1rem 2rem",
-            borderBottom: "0.5px solid rgba(255,255,255,0.08)",
-            background: "#0a1a14",
-            position: "sticky", top: 0, zIndex: 100,
-        }}>
-            {/* Logo E-TOURNEY dengan Ikon Swords */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: "#1a9e75", display: "flex",
-                    alignItems: "center", justifyConten: "center",
-                    justifyContent: "center", color: "#fff", fontSize: 16, fontWeight: 700,
-                }}>
-                    <Swords size={16} />
+        <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${isScrolled ? 'bg-[#0a1a14]/90 backdrop-blur-md border-b border-white/10 py-3' : 'bg-[#0a1a14] border-b border-white/5 py-4'}`}>
+            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                
+                {/* Logo E-TOURNEY */}
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+                        <Swords size={18} />
+                    </div>
+                    <span className="text-base font-bold text-white tracking-wider">
+                        E-TOURNEY
+                    </span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 600, color: "#f0faf6", letterSpacing: 1 }}>
-                    E-TOURNEY
-                </span>
+
+                {/* Menu Navigasi Desktop */}
+                <div className="hidden md:flex items-center gap-8">
+                    <a href="#turnamen" className="flex items-center gap-2 text-sm text-emerald-300/70 hover:text-white transition-colors">
+                        <Trophy size={14} /> Turnamen
+                    </a>
+                    <a href="#fitur" className="flex items-center gap-2 text-sm text-emerald-300/70 hover:text-white transition-colors">
+                        <BookOpen size={14} /> Cara daftar
+                    </a>
+                    <a href="#fitur" className="flex items-center gap-2 text-sm text-emerald-300/70 hover:text-white transition-colors">
+                        <Info size={14} /> Tentang
+                    </a>
+                </div>
+
+                {/* Tombol Aksi Desktop */}
+                <div className="hidden md:flex items-center gap-3">
+                    <Link to="/login" className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border border-white/10 text-emerald-100 hover:bg-white/5 transition-colors">
+                        <LogIn size={14} /> Masuk
+                    </Link>
+                    <Link to="/register" className="text-sm px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-semibold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5">
+                        Daftar gratis
+                    </Link>
+                </div>
+
+                {/* Hamburger Button Mobile */}
+                <button 
+                    className="md:hidden text-emerald-300 hover:text-white"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
             </div>
 
-            {/* Menu Navigasi Tengah dengan Ikon */}
-            <div style={{ display: "flex", gap: 24 }}>
-                {/* Menu: Turnamen */}
-                <a href="#turnamen" style={{
-                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
-                    transition: "color 0.15s",
-                    display: "inline-flex", alignItems: "center", gap: 6 // Mengunci posisi agar sejajar sempurna
-                }}
-                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
-                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
-                >
-                    <Trophy size={14} />
-                    Turnamen
-                </a>
-
-                {/* Menu: Cara Daftar */}
-                <a href="#cara-daftar" style={{
-                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
-                    transition: "color 0.15s",
-                    display: "inline-flex", alignItems: "center", gap: 6
-                }}
-                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
-                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
-                >
-                    <BookOpen size={14} />
-                    Cara daftar
-                </a>
-
-                {/* Menu: Tentang */}
-                <a href="#cara-daftar" style={{ // Mengarah ke id section terdekat
-                    fontSize: 14, color: "#7ab89e", textDecoration: "none",
-                    transition: "color 0.15s",
-                    display: "inline-flex", alignItems: "center", gap: 6
-                }}
-                    onMouseEnter={(e) => (e.target.style.color = "#f0faf6")}
-                    onMouseLeave={(e) => (e.target.style.color = "#7ab89e")}
-                >
-                    <Info size={14} />
-                    Tentang
-                </a>
-            </div>
-
-            {/* Tombol Kanan dengan Ikon LogIn */}
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <Link to="/login" style={{
-                    fontSize: 13, padding: "7px 18px", borderRadius: 8,
-                    border: "0.5px solid rgba(255,255,255,0.15)",
-                    background: "transparent", color: "#c8e6da",
-                    textDecoration: "none", cursor: "pointer",
-                    display: "inline-flex", alignItems: "center", gap: 6
-                }}>
-                    <LogIn size={13} />
-                    Masuk
-                </Link>
-                <Link to="/register" style={{
-                    fontSize: 13, padding: "7px 18px", borderRadius: 8,
-                    border: "none", background: "#1a9e75", color: "#fff",
-                    fontWeight: 600, textDecoration: "none", cursor: "pointer",
-                }}>Daftar gratis</Link>
-            </div>
+            {/* Menu Mobile Dropdown */}
+            {mobileMenuOpen && (
+                <div className="md:hidden absolute top-full left-0 right-0 bg-[#0a1a14] border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
+                    <a href="#turnamen" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-emerald-300/80 hover:text-white p-2 rounded-lg hover:bg-white/5">
+                        <Trophy size={18} /> Turnamen
+                    </a>
+                    <a href="#fitur" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-emerald-300/80 hover:text-white p-2 rounded-lg hover:bg-white/5">
+                        <BookOpen size={18} /> Cara daftar
+                    </a>
+                    <div className="h-px w-full bg-white/10 my-2"></div>
+                    <Link to="/login" className="flex justify-center items-center gap-2 text-sm p-3 rounded-lg border border-white/10 text-emerald-100 hover:bg-white/5">
+                        <LogIn size={16} /> Masuk
+                    </Link>
+                    <Link to="/register" className="flex justify-center items-center text-sm p-3 rounded-lg bg-emerald-500 text-white font-semibold">
+                        Daftar gratis
+                    </Link>
+                </div>
+            )}
         </nav>
     );
 }
@@ -168,88 +132,44 @@ function Navbar() {
 // ── Hero Section ──────────────────────────────────────────────────────────────
 function Hero() {
     return (
-        <section style={{
-            position: "relative", padding: "5rem 2rem 4rem",
-            textAlign: "center", background: "#0d1f1a", overflow: "hidden",
-            borderBottom: "0.5px solid #1a3d30",
-        }}>
-            {/* SVG Background */}
-            <svg
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0 }}
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="xMidYMid slice"
-            >
-                <defs>
-                    <pattern id="hex" x="0" y="0" width="60" height="52" patternUnits="userSpaceOnUse">
-                        <polygon points="30,2 56,16 56,36 30,50 4,36 4,16" fill="none" stroke="rgba(26,158,117,0.12)" strokeWidth="1" />
-                    </pattern>
-                    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <circle cx="20" cy="20" r="1" fill="rgba(26,158,117,0.18)" />
-                    </pattern>
-                    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="rgba(26,158,117,0.18)" />
-                        <stop offset="100%" stopColor="rgba(13,31,26,0)" />
-                    </radialGradient>
-                    <radialGradient id="glow2" cx="20%" cy="80%" r="40%">
-                        <stop offset="0%" stopColor="rgba(26,100,200,0.08)" />
-                        <stop offset="100%" stopColor="rgba(13,31,26,0)" />
-                    </radialGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="#0d1f1a" />
-                <rect width="100%" height="100%" fill="url(#hex)" />
-                <rect width="100%" height="100%" fill="url(#dots)" />
-                <rect width="100%" height="100%" fill="url(#glow)" />
-                <rect width="100%" height="100%" fill="url(#glow2)" />
-                <line x1="0" y1="30%" x2="100%" y2="45%" stroke="rgba(26,158,117,0.06)" strokeWidth="1" />
-                <line x1="0" y1="60%" x2="100%" y2="75%" stroke="rgba(26,158,117,0.06)" strokeWidth="1" />
-                <line x1="20%" y1="0" x2="35%" y2="100%" stroke="rgba(26,158,117,0.05)" strokeWidth="1" />
-                <line x1="65%" y1="0" x2="80%" y2="100%" stroke="rgba(26,158,117,0.05)" strokeWidth="1" />
-                <polygon points="80,20 110,10 120,40 90,50" fill="none" stroke="rgba(26,158,117,0.15)" strokeWidth="1" />
-                <polygon points="580,60 620,45 635,85 595,100" fill="none" stroke="rgba(26,158,117,0.12)" strokeWidth="1" />
-                <circle cx="10%" cy="25%" r="60" fill="none" stroke="rgba(26,158,117,0.08)" strokeWidth="1" />
-                <circle cx="90%" cy="70%" r="80" fill="none" stroke="rgba(26,158,117,0.08)" strokeWidth="1" />
-            </svg>
+        <section className="relative pt-32 pb-20 px-6 text-center bg-[#0d1f1a] overflow-hidden border-b border-[#1a3d30]">
+            {/* SVG Background Ornamen */}
+            <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(26,158,117,0.1)" strokeWidth="1" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[100px]"></div>
+            </div>
 
             {/* Content */}
-            <div style={{ position: "relative", zIndex: 2 }}>
-                <div style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    fontSize: 12, padding: "4px 12px", borderRadius: 999,
-                    background: "rgba(26,158,117,0.15)", color: "#4dd6a3",
-                    border: "0.5px solid rgba(26,158,117,0.35)", marginBottom: "1.5rem",
-                }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4dd6a3", display: "inline-block" }} />
+            <div className="relative z-10 max-w-3xl mx-auto">
+                <div className="inline-flex items-center gap-2 text-xs py-1.5 px-4 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-6">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     Platform turnamen game online
                 </div>
 
-                <h1 style={{
-                    fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 600,
-                    lineHeight: 1.25, marginBottom: "1rem", color: "#f0faf6",
-                }}>
-                    Atur dan ikuti turnamen<br />
-                    <span style={{ color: "#1a9e75" }}>game online</span> dengan mudah
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 text-white tracking-tight">
+                    Atur dan ikuti turnamen <br className="hidden md:block"/>
+                    <span className="text-emerald-500 inline-block drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">game online</span> dengan mudah
                 </h1>
 
-                <p style={{
-                    fontSize: 16, color: "#7ab89e", maxWidth: 500,
-                    margin: "0 auto 2rem", lineHeight: 1.7,
-                }}>
-                    E-Tourney memudahkan penyelenggara membuat bracket, mengelola tim,
+                <p className="text-base md:text-lg text-emerald-100/70 max-w-2xl mx-auto mb-10 leading-relaxed">
+                    E-Tourney memudahkan penyelenggara membuat bracket, mengelola tim, 
                     dan memantau hasil turnamen secara real-time.
                 </p>
 
-                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                    <Link to="/tournaments" style={{
-                        padding: "10px 24px", borderRadius: 8, border: "none",
-                        background: "#1a9e75", color: "#fff", fontSize: 15,
-                        fontWeight: 600, textDecoration: "none", cursor: "pointer",
-                    }}>Lihat turnamen →</Link>
-                    <a href="#cara-daftar" style={{
-                        padding: "10px 24px", borderRadius: 8,
-                        border: "0.5px solid rgba(255,255,255,0.2)",
-                        background: "rgba(255,255,255,0.05)", color: "#c8e6da",
-                        fontSize: 15, textDecoration: "none", cursor: "pointer",
-                    }}>Pelajari lebih lanjut</a>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="#turnamen" className="w-full sm:w-auto px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow-lg shadow-emerald-500/20 transition-transform active:scale-95">
+                        Lihat turnamen →
+                    </a>
+                    <a href="#fitur" className="w-full sm:w-auto px-8 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-emerald-100 font-semibold transition-colors">
+                        Pelajari sistem
+                    </a>
                 </div>
             </div>
         </section>
@@ -266,27 +186,14 @@ const STATS = [
 
 function StatsBar() {
     return (
-        <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            borderBottom: "0.5px solid #1a3d30",
-            background: "#0a1a14",
-        }}>
-            {STATS.map((s, i) => {
-                const IconComponent = s.icon; // Ambil komponen ikonnya
-                return (
-                    <div key={i} style={{
-                        padding: "1.5rem", textAlign: "center",
-                        borderRight: i < STATS.length - 1 ? "0.5px solid #1a3d30" : "none",
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-                    }}>
-                        {/* Ikon Lucide kecil di atas angka statistik */}
-                        <IconComponent size={20} color="#1a9e75" style={{ marginBottom: 6 }} />
-                        <div style={{ fontSize: 24, fontWeight: 600, color: "#1a9e75" }}>{s.num}</div>
-                        <div style={{ fontSize: 13, color: "#7ab89e", marginTop: 4 }}>{s.label}</div>
-                    </div>
-                );
-            })}
+        <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[#1a3d30] bg-[#0a1a14]">
+            {STATS.map((s, i) => (
+                <div key={i} className={`p-6 text-center flex flex-col items-center justify-center ${i % 2 !== 0 ? '' : 'border-r border-[#1a3d30]'} md:border-r border-[#1a3d30] last:border-r-0 hover:bg-white/[0.02] transition-colors`}>
+                    <s.icon size={24} className="text-emerald-500 mb-3 opacity-80" />
+                    <div className="text-2xl md:text-3xl font-black text-emerald-500 mb-1">{s.num}</div>
+                    <div className="text-xs md:text-sm font-medium text-emerald-200/60 uppercase tracking-wider">{s.label}</div>
+                </div>
+            ))}
         </div>
     );
 }
@@ -295,101 +202,103 @@ function StatsBar() {
 const FEATURES = [
     { icon: Trophy, title: "Bracket otomatis", desc: "Generate bracket single/double elimination secara otomatis begitu pendaftaran ditutup." },
     { icon: Users, title: "Manajemen tim", desc: "Daftarkan tim, kelola roster pemain, dan pantau performa di setiap pertandingan." },
-    { icon: Wallet, title: "Pembayaran terintegrasi", desc: "Kelola biaya pendaftaran dan distribusi hadiah langsung dari dashboard." },
-    { icon: BarChart3, title: "Statistik real-time", desc: "Pantau pendaftaran, hasil match, dan pendapatan langsung dari MongoDB Atlas." },
+    { icon: Wallet, title: "Pembayaran terintegrasi", desc: "Kelola biaya pendaftaran via QRIS dan distribusi hadiah langsung dari dashboard." },
+    { icon: BarChart3, title: "Statistik real-time", desc: "Pantau pendaftaran, hasil match, dan riwayat kemenangan langsung dari database." },
 ];
 
 function Features() {
     return (
-        <section id="cara-daftar" style={{ padding: "3rem 2rem", background: "#0d1f1a" }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", color: "#f0faf6", marginBottom: 6 }}>
-                Semua yang kamu butuhkan
-            </h2>
-            <p style={{ fontSize: 15, color: "#7ab89e", textAlign: "center", marginBottom: "2rem" }}>
-                Fitur lengkap untuk penyelenggara dan peserta turnamen
-            </p>
-            <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 16, maxWidth: 900, margin: "0 auto",
-            }}>
-                {FEATURES.map((f, i) => {
-                    const IconComponent = f.icon; // Ambil komponen ikonnya
-                    return (
-                        <div key={i} style={{
-                            background: "#0a1a14", border: "0.5px solid #1a3d30",
-                            borderRadius: 12, padding: "1.25rem",
-                        }}>
-                            <div style={{
-                                width: 40, height: 40, borderRadius: 8,
-                                background: "rgba(26,158,117,0.15)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                marginBottom: 12,
-                            }}>
-                                {/* Ganti emoji kaku pake ikon Lucide premium */}
-                                <IconComponent size={18} color="#4dd6a3" />
+        <section id="fitur" className="py-20 px-6 bg-[#0d1f1a]">
+            <div className="max-w-5xl mx-auto">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold text-white mb-3">Semua yang kamu butuhkan</h2>
+                    <p className="text-emerald-200/60 text-lg">Fitur lengkap untuk kelancaran turnamen E-Sports</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {FEATURES.map((f, i) => (
+                        <div key={i} className="bg-[#0a1a14] border border-[#1a3d30] rounded-2xl p-6 hover:border-emerald-500/50 hover:bg-[#0f241d] transition-all group">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5 group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all">
+                                <f.icon size={24} className="text-emerald-400" />
                             </div>
-                            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#f0faf6", marginBottom: 6 }}>{f.title}</h3>
-                            <p style={{ fontSize: 13, color: "#7ab89e", lineHeight: 1.6 }}>{f.desc}</p>
+                            <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                            <p className="text-sm text-emerald-100/60 leading-relaxed">{f.desc}</p>
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
             </div>
         </section>
     );
 }
 
 // ── Tournament Cards ──────────────────────────────────────────────────────────
-function TournamentCard({ nama, game, badge, badgeColor, slots, maxSlots, tanggal, hadiah }) {
-    return (
-        <div style={{
-            background: "#0a1a14", border: "0.5px solid #1a3d30",
-            borderRadius: 12, padding: "1.25rem",
-        }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-                <span style={{
-                    fontSize: 11, padding: "3px 10px", borderRadius: 999,
-                    fontWeight: 600, background: badgeColor.bg, color: badgeColor.text,
-                }}>{badge}</span>
-                <span style={{
-                    fontSize: 11, padding: "3px 10px", borderRadius: 999,
-                    fontWeight: 600, background: "rgba(26,158,117,0.15)", color: "#4dd6a3",
-                }}>Open</span>
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#f0faf6", marginBottom: 4 }}>{nama}</div>
-            <div style={{ fontSize: 12, color: "#7ab89e", marginBottom: 12 }}>{game}</div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#7ab89e" }}>
-                <span>👥 {slots} / {maxSlots} tim</span>
-                <span>📅 {tanggal}</span>
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#1a9e75", marginTop: 8 }}>
-                {hadiah ? `Hadiah: ${hadiah}` : "Hadiah: —"}
-            </div>
-        </div>
-    );
-}
-
 function Tournaments() {
+    // Data dummy sementara (Nanti akan diganti dengan data fetch dari API)
     const list = [
-        { nama: "It Feast Tournament", game: "Mobile Legends Bang Bang", badge: "MLBB", badgeColor: { bg: "#1e3a5f", text: "#5ba3e0" }, slots: 0, maxSlots: 8, tanggal: "6 Jun 2026", hadiah: "Rp 1.000.000" },
-        { nama: "MPL ID Community", game: "Mobile Legends Bang Bang", badge: "MLBB", badgeColor: { bg: "#1e3a5f", text: "#5ba3e0" }, slots: 0, maxSlots: 9, tanggal: "13 Mei 2026", hadiah: null },
-        { nama: "E-Football Champ", game: "E-Football", badge: "E-Football", badgeColor: { bg: "#3a2a1e", text: "#e09a5b" }, slots: 0, maxSlots: 6, tanggal: "13 Mei 2026", hadiah: null },
+        { nama: "It Feast Tournament", game: "Mobile Legends Bang Bang", badge: "MLBB", badgeColor: "bg-blue-500/10 text-blue-400 border border-blue-500/20", slots: 6, maxSlots: 8, tanggal: "6 Jun 2026", hadiah: "Rp 1.000.000" },
+        { nama: "MPL ID Community", game: "Mobile Legends Bang Bang", badge: "MLBB", badgeColor: "bg-blue-500/10 text-blue-400 border border-blue-500/20", slots: 9, maxSlots: 9, tanggal: "13 Mei 2026", hadiah: null },
+        { nama: "E-Football Champ", game: "E-Football", badge: "E-Football", badgeColor: "bg-orange-500/10 text-orange-400 border border-orange-500/20", slots: 2, maxSlots: 6, tanggal: "13 Mei 2026", hadiah: null },
     ];
 
     return (
-        <section id="turnamen" style={{ padding: "3rem 2rem", background: "#0d1f1a" }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, textAlign: "center", color: "#f0faf6", marginBottom: 6 }}>
-                Turnamen sedang berjalan
-            </h2>
-            <p style={{ fontSize: 15, color: "#7ab89e", textAlign: "center", marginBottom: "2rem" }}>
-                Daftar sekarang sebelum slot penuh
-            </p>
-            <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 16, maxWidth: 900, margin: "0 auto",
-            }}>
-                {list.map((t, i) => <TournamentCard key={i} {...t} />)}
+        <section id="turnamen" className="py-20 px-6 bg-[#0a1a14] border-t border-[#1a3d30]">
+            <div className="max-w-6xl mx-auto">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                    <div>
+                        <h2 className="text-3xl font-bold text-white mb-2">Turnamen Terbaru</h2>
+                        <p className="text-emerald-200/60">Daftarkan timmu sekarang sebelum slot penuh!</p>
+                    </div>
+                    <Link to="/tournaments" className="text-emerald-400 hover:text-emerald-300 font-semibold text-sm flex items-center gap-1 group">
+                        Lihat Semua <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {list.map((t, i) => {
+                        const isFull = t.slots >= t.maxSlots;
+                        return (
+                            <div key={i} className="bg-[#0d1f1a] border border-[#1a3d30] rounded-2xl p-6 flex flex-col hover:border-emerald-500/40 transition-colors">
+                                {/* Header Card */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 uppercase rounded-md ${t.badgeColor}`}>
+                                        {t.badge}
+                                    </span>
+                                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${isFull ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                                        {isFull ? 'Penuh' : 'Open'}
+                                    </span>
+                                </div>
+                                
+                                {/* Info Turnamen */}
+                                <h3 className="text-lg font-bold text-white mb-1 line-clamp-1">{t.nama}</h3>
+                                <p className="text-sm text-emerald-100/50 mb-6">{t.game}</p>
+                                
+                                {/* Detail Metriks */}
+                                <div className="mt-auto space-y-3 bg-[#0a1a14] p-4 rounded-xl border border-white/5">
+                                    <div className="flex justify-between items-center text-xs font-medium">
+                                        <span className="text-emerald-100/50 flex items-center gap-1.5"><Users size={14}/> Slot Tim</span>
+                                        <span className="text-white">{t.slots} / {t.maxSlots}</span>
+                                    </div>
+                                    {/* Progress Bar Slot */}
+                                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                        <div 
+                                            className={`h-full rounded-full ${isFull ? 'bg-rose-500' : 'bg-emerald-500'}`} 
+                                            style={{ width: `${(t.slots / t.maxSlots) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs font-medium pt-2">
+                                        <span className="text-emerald-100/50">Mulai</span>
+                                        <span className="text-white">{t.tanggal}</span>
+                                    </div>
+                                </div>
+
+                                {/* Tombol Action */}
+                                <button disabled={isFull} className={`w-full mt-5 py-2.5 rounded-xl text-sm font-bold transition-all ${isFull ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-400 text-white active:scale-95'}`}>
+                                    {isFull ? 'Pendaftaran Tutup' : 'Daftar Sekarang'}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </section>
     );
@@ -398,22 +307,17 @@ function Tournaments() {
 // ── CTA ───────────────────────────────────────────────────────────────────────
 function CTA() {
     return (
-        <section style={{
-            padding: "3rem 2rem", textAlign: "center",
-            background: "#0a1a14", borderTop: "0.5px solid #1a3d30",
-        }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: "#f0faf6", marginBottom: "0.75rem" }}>
-                Siap buat atau ikuti turnamen?
-            </h2>
-            <p style={{ color: "#7ab89e", marginBottom: "1.5rem" }}>
-                Daftar gratis, tidak perlu kartu kredit.
-            </p>
-            <Link to="/register" style={{
-                padding: "10px 28px", borderRadius: 8,
-                background: "#1a9e75", color: "#fff",
-                fontSize: 15, fontWeight: 600,
-                textDecoration: "none", display: "inline-block",
-            }}>Mulai sekarang →</Link>
+        <section className="py-20 px-6 text-center bg-[#0d1f1a] border-t border-[#1a3d30]">
+            <div className="max-w-2xl mx-auto bg-gradient-to-b from-emerald-500/10 to-transparent p-10 rounded-3xl border border-emerald-500/20">
+                <Trophy size={48} className="mx-auto text-emerald-400 mb-6" />
+                <h2 className="text-3xl font-black text-white mb-4">Siap menjemput kemenanganmu?</h2>
+                <p className="text-emerald-100/70 mb-8 max-w-md mx-auto">
+                    Bergabunglah dengan ribuan pemain lainnya. Buat timmu, ikuti turnamen, dan buktikan siapa yang terbaik!
+                </p>
+                <Link to="/register" className="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow-lg shadow-emerald-500/20 transition-transform active:scale-95 inline-flex items-center gap-2">
+                    Daftar Sekarang Gratis <UserCheck size={18} />
+                </Link>
+            </div>
         </section>
     );
 }
@@ -421,12 +325,14 @@ function CTA() {
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
     return (
-        <footer style={{
-            padding: "1.5rem 2rem", textAlign: "center",
-            borderTop: "0.5px solid #1a3d30",
-            fontSize: 13, color: "#7ab89e", background: "#0a1a14",
-        }}>
-            © 2026 E-Tourney · Platform turnamen game online
+        <footer className="py-8 px-6 text-center border-t border-[#1a3d30] bg-[#0a1a14]">
+            <div className="flex items-center justify-center gap-2 mb-4">
+                <Swords size={20} className="text-emerald-500" />
+                <span className="text-lg font-bold text-white tracking-wider">E-TOURNEY</span>
+            </div>
+            <p className="text-sm text-emerald-100/50">
+                © {new Date().getFullYear()} E-Tourney. Platform manajemen turnamen game online profesional.
+            </p>
         </footer>
     );
 }
@@ -434,7 +340,7 @@ function Footer() {
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function HomePage() {
     return (
-        <div style={{ minHeight: "100vh", fontFamily: "sans-serif" }}>
+        <div className="min-h-screen font-sans bg-[#0d1f1a] selection:bg-emerald-500/30">
             <Navbar />
             <Hero />
             <StatsBar />
