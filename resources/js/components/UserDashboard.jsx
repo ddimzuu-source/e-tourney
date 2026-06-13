@@ -3,7 +3,7 @@ import api from "./api";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Trophy, Shield, CreditCard, Search, LogOut,
-  Swords, X, Medal, Gamepad2, Clock, CheckCircle
+  Swords, X, Receipt, Gamepad2, Clock, CheckCircle
 } from "lucide-react";
 
 const statusConfig = {
@@ -197,26 +197,31 @@ export default function UserDashboardPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white">
       {/* Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-30 h-16 flex items-center gap-4 px-5 bg-[#0d0d0f]/95 backdrop-blur border-b border-white/5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-            <Swords size={16} className="text-[#0d0d0f]" />
+      <header className="fixed top-0 left-0 right-0 z-30 bg-[#0d0d0f]/95 backdrop-blur border-b border-white/5">
+        <div className="h-14 flex items-center gap-3 px-4">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+              <Swords size={14} className="text-[#0d0d0f]" />
+            </div>
+            <span className="text-white font-black tracking-wider text-sm">E<span className="text-emerald-400">-</span>TOURNEY</span>
           </div>
-          <span className="text-white font-black tracking-wider">E-TOURNEY</span>
-        </div>
-        <div className="flex-1 max-w-md mx-auto relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari turnamen..." className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 placeholder-gray-600 focus:outline-none" />
-        </div>
-        <div className="flex items-center gap-3 ml-auto">
-          <p className="text-sm font-semibold text-white hidden sm:block">{currentUser?.name ?? "Peserta Ganteng"}</p>
-          <button onClick={handleLogout} className="p-2 text-gray-600 hover:text-rose-400"><LogOut size={16} /></button>
+          <div className="flex-1 relative">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari turnamen..."
+              className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/50" />
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
+              {String(currentUser?.name ?? "P").slice(0,2).toUpperCase()}
+            </div>
+            <button onClick={handleLogout} className="p-1.5 text-gray-600 hover:text-rose-400"><LogOut size={15} /></button>
+          </div>
         </div>
       </header>
 
-      {notif && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-neutral-900 border border-white/10 text-sm">{notif}</div>}
+      {notif && <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-neutral-900 border border-white/10 text-sm whitespace-nowrap">{notif}</div>}
 
-      <main className="pt-24 pb-20 max-w-2xl mx-auto px-4">
+      <main className="pt-16 pb-24 max-w-2xl mx-auto px-4">
 
         {/* TAB 1: BERANDA */}
         {activeTab === "home" && (
@@ -233,7 +238,7 @@ export default function UserDashboardPage() {
                 <p className="text-xs text-gray-500 mt-0.5">Tim Saya</p>
               </div>
               <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3 text-center">
-                <Medal size={18} className="text-violet-400 mx-auto mb-1" />
+                <Receipt size={18} className="text-violet-400 mx-auto mb-1" />
                 <p className="text-2xl font-black text-violet-400">{payments.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Transaksi</p>
               </div>

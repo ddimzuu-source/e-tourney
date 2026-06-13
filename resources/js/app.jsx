@@ -21,7 +21,7 @@ if (token) axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
 const getUser  = () => JSON.parse(localStorage.getItem('auth_user') || 'null');
 const getRole  = () => getUser()?.role ?? null;
-const isLogged = () => !!getUser();
+const isLogged = () => !!localStorage.getItem('auth_token');
 
 // ── Guards ────────────────────────────────────────────────────────────────────
 
