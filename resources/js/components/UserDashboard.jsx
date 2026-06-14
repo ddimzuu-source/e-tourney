@@ -41,6 +41,7 @@ export default function UserDashboardPage() {
   const [currentUser, setCurrentUser]   = useState(null);
   const [proofFile, setProofFile]       = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  const [detailTeam, setDetailTeam]     = useState(null);
 
   useEffect(() => {
     api.get("/me")
@@ -282,24 +283,48 @@ export default function UserDashboardPage() {
 
         {/* TAB 2: TIM SAYA */}
         {activeTab === "teams" && (
-          <div className="space-y-3">
+          <div className="space-y-2 pt-3">
             {myTeams.map(t => {
               const sc = teamStatusConfig[t.status] ?? teamStatusConfig.pending;
+              const tournament = tournaments.find(tr => (tr.id || tr._id) === t.tournament_id);
               return (
-                <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4 flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-white">{t.name}</p>
-                    <p className="text-xs text-gray-500">ID Turnamen: {t.tournament_id}</p>
+                <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-white text-sm truncate">{t.name}</p>
+                      <p className="text-[11px] text-gray-500 truncate">
+                        {tournament?.name ?? `ID: ${t.tournament_id}`}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-[11px] font-semibold border shrink-0 ml-2 ${sc.bg} ${sc.text} ${sc.border}`}>
+                      {sc.label}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${sc.bg} ${sc.text} ${sc.border}`}>{sc.label}</span>
+
+                  {/* Anggota preview */}
+                  {t.members?.length > 0 && (
+                    <div className="flex gap-1 flex-wrap mb-2">
+                      {t.members.slice(0, 3).map((m, i) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">{m}</span>
+                      ))}
+                      {t.members.length > 3 && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">+{t.members.length - 3} lagi</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDetailTeam(t)}
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 text-gray-400 border border-white/10 hover:text-white"
+                    >
+                      Lihat Detail
+                    </button>
                     {t.status === "approved" && (
                       <button onClick={() => {
                         setPayForm({ ...EMPTY_PAY_FORM, team_id: t.id || t._id, tournament_id: t.tournament_id });
-                        setProofFile(null);
-                        setProofPreview(null);
-                        setShowPayModal(true);
-                      }} className="px-3 py-1 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-xs font-bold transition-colors">
+                        setProofFile(null); setProofPreview(null); setShowPayModal(true);
+                      }} className="flex-1 py-1.5 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-[11px] font-bold">
                         Bayar
                       </button>
                     )}
@@ -525,6 +550,57 @@ export default function UserDashboardPage() {
               className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-sm font-bold hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? "Menyimpan..." : "Simpan & Daftar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detail Tim */}
+      {detailTeam && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#111113] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-md p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-bold text-white">Detail Tim</h2>
+              <button onClick={() => setDetailTeam(null)} className="text-gray-500 hover:text-white p-1"><X size={16} /></button>
+            </div>
+
+            {/* Status */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${teamStatusConfig[detailTeam.status]?.bg ?? "bg-white/5"} border ${teamStatusConfig[detailTeam.status]?.border ?? "border-white/10"}`}>
+              <span className={`text-xs font-bold ${teamStatusConfig[detailTeam.status]?.text ?? "text-gray-400"}`}>
+                Status: {teamStatusConfig[detailTeam.status]?.label ?? detailTeam.status}
+              </span>
+            </div>
+
+            {/* Info */}
+            {[
+              { label: "Nama Tim", value: detailTeam.name },
+              { label: "Turnamen", value: tournaments.find(tr => (tr.id || tr._id) === detailTeam.tournament_id)?.name ?? detailTeam.tournament_id },
+              { label: "Didaftarkan", value: detailTeam.registered_at ? new Date(detailTeam.registered_at).toLocaleDateString("id-ID") : "-" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between items-center py-2 border-b border-white/5">
+                <span className="text-xs text-gray-500">{label}</span>
+                <span className="text-xs text-white font-medium text-right max-w-[200px] truncate">{value}</span>
+              </div>
+            ))}
+
+            {/* Anggota */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2">Anggota Tim ({detailTeam.members?.length ?? 0} orang)</p>
+              <div className="space-y-1.5">
+                {detailTeam.members?.length > 0 ? detailTeam.members.map((m, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
+                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] flex items-center justify-center font-bold shrink-0">{i + 1}</span>
+                    <span className="text-xs text-white">{m}</span>
+                  </div>
+                )) : (
+                  <p className="text-xs text-gray-600">Belum ada anggota.</p>
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => setDetailTeam(null)}
+              className="w-full py-2 rounded-lg bg-white/5 text-gray-400 text-xs font-semibold border border-white/10">
+              Tutup
             </button>
           </div>
         </div>
