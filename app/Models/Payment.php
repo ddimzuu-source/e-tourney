@@ -16,7 +16,8 @@ class Payment extends Model
         'amount',
         'status',
         'payment_method',
-        'proof_image',
+        'proof',      // path file di storage
+        'proof_url',  // public URL untuk ditampilkan
         'paid_at',
     ];
     public function team()

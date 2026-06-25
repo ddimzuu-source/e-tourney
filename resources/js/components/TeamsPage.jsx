@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
-import axios from "axios";
+import api from "./api";
 import { useNavigate } from "react-router-dom";
 import {
   Shield, Plus, Edit3, Trash2, X, Save, Loader2,
@@ -8,7 +8,6 @@ import {
   Users, Settings, LogOut, Menu, CheckCircle, Clock
 } from "lucide-react";
 
-const API_BASE = "http://127.0.0.1:8000/api";
 
 const NAV_ITEMS = [
   { id: "/",            label: "Dashboard",   icon: LayoutDashboard },
@@ -42,7 +41,7 @@ export default function TeamsPage() {
 
   const fetchTeams = () => {
     setLoading(true);
-    axios.get(`${API_BASE}/teams`)
+    api.get(`/teams`)
       .then(res => setTeams(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
@@ -50,7 +49,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     fetchTeams();
-    axios.get(`${API_BASE}/tournaments`).then(res => setTournaments(res.data));
+    api.get(`/tournaments`).then(res => setTournaments(res.data));
   }, []);
 
   const filtered = teams.filter(t =>
@@ -66,9 +65,9 @@ export default function TeamsPage() {
     try {
       const payload = { ...form, members: form.members.split(",").map(m => m.trim()).filter(Boolean) };
       if (editData) {
-        await axios.put(`${API_BASE}/teams/${editData.id}`, payload);
+        await api.put(`/teams/${editData.id}`, payload);
       } else {
-        await axios.post(`${API_BASE}/teams`, payload);
+        await api.post(`/teams`, payload);
       }
       fetchTeams();
       closeModal();
@@ -81,7 +80,7 @@ export default function TeamsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/teams/${id}`);
+      await  api.delete(`/teams/${id}`);
       fetchTeams();
       setDeleteId(null);
     } catch (err) { console.error(err); }

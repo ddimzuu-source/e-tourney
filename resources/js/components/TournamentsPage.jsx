@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
-import axios from "axios";
+import api from "./api";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Trophy, Plus, Eye, Edit3, Trash2, X, Save,
@@ -8,7 +8,6 @@ import {
   Shield, CreditCard, Users, Settings, LogOut, Menu
 } from "lucide-react";
 
-const API_BASE = "http://127.0.0.1:8000/api";
 
 const statusConfig = {
   open:         { label: "Open",         dot: "bg-emerald-400", text: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" },
@@ -62,7 +61,7 @@ export default function TournamentsPage() {
 
   const fetchTournaments = () => {
     setLoading(true);
-    axios.get(`${API_BASE}/tournaments`)
+    api.get(`/tournaments`)
       .then(res => setTournaments(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
@@ -94,9 +93,9 @@ export default function TournamentsPage() {
     try {
       const payload = { ...form, min_members: form.min_members ? Number(form.min_members) : null };
       if (editData) {
-        await axios.put(`${API_BASE}/tournaments/${editData.id || editData._id}`, payload);
+        await api.put(`/tournaments/${editData.id || editData._id}`, payload);
       } else {
-        await axios.post(`${API_BASE}/tournaments`, payload);
+        await api.post(`/tournaments`, payload);
       }
       fetchTournaments();
       closeModal();
@@ -109,7 +108,7 @@ export default function TournamentsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/tournaments/${id}`);
+      await api.delete(`/tournaments/${id}`);
       fetchTournaments();
       setDeleteId(null);
     } catch (err) {

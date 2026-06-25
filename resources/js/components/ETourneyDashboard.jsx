@@ -170,7 +170,12 @@ export default function ETourneyDashboard() {
                           <tr key={t.id} className="hover:bg-white/[0.025] transition-colors group">
                             <td className="px-5 py-3.5">
                             <p className="font-semibold text-white">{t.name}</p>
-                            <p className="text-xs text-gray-600 mt-0.5">Mulai: {t.start_date} &middot; Hadiah: {t.prize ?? '-'}</p>
+                            <p className="text-xs text-gray-600 mt-0.5">Mulai: {t.start_date} · Hadiah: {t.prize ?? '-'}</p>
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${gameTagColors[t.game_tag] ?? "bg-gray-700/30 text-gray-400 border-gray-600/30"}`}>
+                                {t.game_tag ?? t.game ?? '—'}
+                              </span>
                             </td>
                             <td className="px-5 py-3.5">
                               <span className="text-white font-semibold">{slotsUsed}/{slotsTotal}</span>

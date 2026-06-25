@@ -102,8 +102,8 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment tidak ditemukan.'], 404);
         }
  
-        if ($payment->proof_path) {
-            Storage::disk('public')->delete($payment->proof_path);
+        if ($payment->proof) {
+            Storage::disk('public')->delete($payment->proof);
         }
  
         $payment->delete();

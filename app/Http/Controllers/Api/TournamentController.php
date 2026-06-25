@@ -31,12 +31,14 @@ class TournamentController extends Controller
         ]);
  
         // Challonge integration (tetap dipertahankan)
-        $apiKey   = env('CHALLONGE_API_KEY');
-        $username = 'drmwnmass';
-        $urlChallonge = 'etourney_' . time();
- 
-        try {
-            $response = Http::withBasicAuth($username, $apiKey)
+       $apiKey   = env('CHALLONGE_API_KEY');
+              $username = env('CHALLONGE_USERNAME', 'drmwnmass');
+              $urlChallonge = 'etourney_' . time();
+
+         try {
+             if (empty($apiKey)) throw new \Exception('No API key');
+    
+    $response = Http::withBasicAuth($username, $apiKey)
                 ->post('https://api.challonge.com/v1/tournaments.json', [
                     'tournament' => [
                         'name'            => $request->name,

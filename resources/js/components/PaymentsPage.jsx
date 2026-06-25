@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
-import axios from "axios";
+import api from "./api";
 import { useNavigate } from "react-router-dom";
 import {
   CreditCard, CheckCircle, XCircle, Clock, Loader2,
@@ -8,7 +8,7 @@ import {
   Users, Settings, LogOut, Menu, Eye, X, ImageIcon
 } from "lucide-react";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+
 const STORAGE_BASE = "http://127.0.0.1:8000/storage";
 
 const NAV_ITEMS = [
@@ -38,7 +38,7 @@ export default function PaymentsPage() {
 
   const fetchPayments = () => {
     setLoading(true);
-    axios.get(`${API_BASE}/payments`)
+    api.get(`/payments`)
       .then(res => setPayments(Array.isArray(res.data) ? res.data : res.data.data ?? []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
@@ -53,7 +53,7 @@ export default function PaymentsPage() {
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      await axios.put(`${API_BASE}/payments/${id}`, { status });
+      await api.put(`/payments/${id}`, { status });
       fetchPayments();
       setViewData(prev => prev ? { ...prev, status } : null);
       showNotif(status === "paid" ? "✅ Pembayaran dikonfirmasi!" : "❌ Pembayaran ditolak.");

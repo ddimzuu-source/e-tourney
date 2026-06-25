@@ -144,9 +144,12 @@ export default function UserDashboardPage() {
     setSaving(true);
     try {
       const formData = new FormData();
+      const relatedTournament = tournaments.find(
+        tr => (tr.id || tr._id) === payForm.tournament_id
+      );
       formData.append("team_id",        payForm.team_id);
       formData.append("tournament_id",  payForm.tournament_id);
-      formData.append("amount",         10000);
+      formData.append("amount",         relatedTournament?.registration_fee ?? 0);
       formData.append("payment_method", "qris");
       formData.append("proof",          proofFile);
 
@@ -246,34 +249,59 @@ export default function UserDashboardPage() {
             </div>
 
             <div className="space-y-3">
-              {filteredTournaments.map(t => (
-                <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-bold text-white">{t.name}</h4>
-                      <p className="text-xs text-gray-500">{t.game} · Rp {Number(t.registration_fee || 0).toLocaleString("id-ID")}</p>
+              {filteredTournaments.map(t => {
+                // Definisi kondisi slot penuh dan status pendaftaran terbuka
+                const isFull = (t.slots_used ?? 0) >= (t.max_teams ?? 0);
+                const canRegister = (t.status === "open" || t.status === "registration") && !isFull;
+
+                return (
+                  <div key={t.id || t._id} className="bg-[#111113] border border-white/5 rounded-xl p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-white">{t.name}</h4>
+                        <p className="text-xs text-gray-500">{t.game} · Rp {Number(t.registration_fee || 0).toLocaleString("id-ID")}</p>
+                      </div>
+                      
+                      {/* Menggunakan skema logika tombol baru */}
+                      {canRegister ? (
+                        <button
+                          onClick={() => handleDaftar(t)}
+                          className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
+                        >
+                          Daftar
+                        </button>
+                      ) : t.status === "finished" ? (
+                        <span className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-500/10 text-gray-600 border border-gray-500/20">
+                          Selesai
+                        </span>
+                      ) : isFull ? (
+                        <span className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          Penuh
+                        </span>
+                      ) : (
+                        <span className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/5 text-gray-600 border border-white/5">
+                          Tutup
+                        </span>
+                      )}
                     </div>
-                    <button onClick={() => handleDaftar(t)} className="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
-                      Daftar
-                    </button>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
-                      👥 {t.slots_used ?? 0}/{t.max_teams} slot
-                    </span>
-                    {t.min_members && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                        Min. {t.min_members} anggota/tim
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                        👥 {t.slots_used ?? 0}/{t.max_teams} slot
                       </span>
-                    )}
-                    {t.status === "ongoing" && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 animate-pulse">
-                        🔴 Berlangsung
-                      </span>
-                    )}
+                      {t.min_members && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                          Min. {t.min_members} anggota/tim
+                        </span>
+                      )}
+                      {t.status === "ongoing" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 animate-pulse">
+                          🔴 Berlangsung
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredTournaments.length === 0 && (
                 <p className="text-center text-xs text-gray-600 py-10">Tidak ada turnamen ditemukan.</p>
               )}

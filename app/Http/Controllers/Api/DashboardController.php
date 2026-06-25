@@ -28,10 +28,18 @@ class DashboardController extends Controller
 
     public function recentRegistrations(): JsonResponse
     {
-        $registrations = Team::with('tournament')
-            ->orderBy('created_at', 'desc')
+        $registrations = Team::orderBy('created_at', 'desc')
             ->limit(7)
-            ->get();
+            ->get()
+            ->map(function ($team) {
+                $tournament = \App\Models\Tournament::find($team->tournament_id);
+                return [
+                    '_id'           => (string) $team->_id,
+                    'name'          => $team->name,
+                    'tournament_id' => $tournament?->name ?? $team->tournament_id,
+                    'registered_at' => $team->registered_at ?? $team->created_at,
+                ];
+            });
 
         return response()->json($registrations);
     }
