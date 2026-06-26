@@ -9,6 +9,46 @@ use App\Models\Payment;
 
 class PaymentController extends Controller
 {
+    /**
+     * Menampilkan daftar pembayaran untuk Admin maupun User (GET /api/payments)
+     */
+    public function index()
+    {
+        try {
+            // 1. Ambil data user yang sedang login dari token
+            $user = auth()->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Silakan login terlebih dahulu.'
+                ], 401);
+            }
+
+            // 2. Cek role user untuk menentukan query data
+            // Jika admin, tampilkan semua data pembayaran yang masuk
+            if ($user->role === 'admin') {
+                $payments = Payment::with(['team', 'tournament'])->get();
+            } else {
+                // Jika user/peserta biasa, tampilkan hanya pembayaran miliknya berdasarkan user_id
+                $payments = Payment::with(['team', 'tournament'])
+                                   ->where('user_id', $user->id)
+                                   ->get();
+            }
+
+            return response()->json($payments, 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data pembayaran: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mengunggah bukti transfer ke Supabase (POST /api/payments/upload)
+     */
     public function uploadProof(Request $request)
     {
         // 1. Validasi input file dari frontend (Wajib berupa gambar max 2MB)
