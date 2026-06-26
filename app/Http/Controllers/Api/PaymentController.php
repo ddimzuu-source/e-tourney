@@ -1,114 +1,66 @@
 <?php
- 
+
 namespace App\Http\Controllers\Api;
- 
+
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Team;
- 
+use App\Models\Payment; 
+
 class PaymentController extends Controller
 {
-    // GET /api/payments
-    public function index()
+    public function uploadProof(Request $request)
     {
-        $user = auth('api')->user();
- 
-        if (in_array($user?->role, ['admin', 'panitia'])) {
-            $payments = Payment::orderBy('created_at', 'desc')->get();
-        } else {
-            $teamIds = Team::where('captain_id', (string) $user?->id)
-                           ->get()
-                           ->map(fn($t) => (string) $t->id)
-                           ->toArray();
- 
-            $payments = Payment::whereIn('team_id', $teamIds)
-                               ->orderBy('created_at', 'desc')
-                               ->get();
-        }
- 
-        return response()->json($payments);
-    }
- 
-    // GET /api/payments/{id}
-    public function show($id)
-    {
-        $payment = Payment::find($id);
-        if (!$payment) {
-            return response()->json(['success' => false, 'message' => 'Payment tidak ditemukan.'], 404);
-        }
-        return response()->json($payment);
-    }
- 
-    // POST /api/payments
-    public function store(Request $request)
-    {
+        // 1. Validasi input file dari frontend (Wajib berupa gambar max 2MB)
         $request->validate([
-            'team_id'        => 'required|string',
-            'tournament_id'  => 'required|string',
-            'amount'         => 'required|numeric',
-            'payment_method' => 'nullable|string',
-            'proof'          => 'required|image|mimes:jpg,jpeg,png|max:5120',
+            'payment_id' => 'required',
+            'proof_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
- 
-        $path    = $request->file('proof')->store('payments/proofs', 'public');
-        $proofUrl = Storage::url($path);
- 
-        $payment = Payment::create([
-            'team_id'        => $request->team_id,
-            'tournament_id'  => $request->tournament_id,
-            'amount'         => $request->amount,
-            'payment_method' => $request->payment_method ?? 'QRIS',
-            'proof'          => $path,
-            'proof_url'      => $proofUrl,
-            'status'         => 'pending',
-            'paid_at'        => now(),
-        ]);
- 
-        return response()->json([
-            'success' => true,
-            'message' => 'Bukti pembayaran berhasil dikirim. Menunggu konfirmasi panitia.',
-            'data'    => $payment,
-        ], 201);
-    }
- 
-    // PUT /api/payments/{id}
-    public function update(Request $request, $id)
-    {
-        $payment = Payment::find($id);
-        if (!$payment) {
-            return response()->json(['success' => false, 'message' => 'Payment tidak ditemukan.'], 404);
+
+        try {
+            // 2. Ambil file gambar dari request
+            $file = $request->file('proof_image');
+            
+            // 3. Buat nama file unik agar tidak bentrok di Supabase
+            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            // 4. Upload ke disk 'supabase' yang sudah di-setup di config/filesystems.php
+            $path = Storage::disk('supabase')->putFileAs('proofs', $file, $fileName);
+
+            // 5. FIX: Definisikan dulu disk-nya ke variabel agar bisa memanggil method url() tanpa error
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $supabaseDisk */
+            $supabaseDisk = Storage::disk('supabase');
+            $publicUrl = $supabaseDisk->url($path);
+
+            // 6. UPDATE DATABASE: Menyimpan URL bukti transfer ke data pembayaran terkait di MongoDB
+            /** @var \App\Models\Payment|\Illuminate\Database\Eloquent\Builder $paymentModel */
+            $paymentModel = new Payment();
+            $payment = $paymentModel->find($request->payment_id);
+            
+            if (!$payment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pembayaran tidak ditemukan.'
+                ], 404);
+            }
+
+            $payment->update([
+                'proof_path' => $publicUrl, 
+                'status' => 'PENDING'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bukti transfer berhasil diunggah ke Supabase dan database diperbarui!',
+                'path' => $path,
+                'url' => $publicUrl
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengunggah file: ' . $e->getMessage()
+            ], 500);
         }
- 
-        $request->validate([
-            'status' => 'required|in:pending,paid,rejected',
-        ]);
- 
-        $payment->update(['status' => $request->status]);
- 
-        return response()->json([
-            'success' => true,
-            'message' => 'Status pembayaran diperbarui.',
-            'data'    => $payment,
-        ]);
-    }
- 
-    // DELETE /api/payments/{id}
-    public function destroy($id)
-    {
-        $payment = Payment::find($id);
-        if (!$payment) {
-            return response()->json(['success' => false, 'message' => 'Payment tidak ditemukan.'], 404);
-        }
- 
-        if ($payment->proof) {
-            Storage::disk('public')->delete($payment->proof);
-        }
- 
-        $payment->delete();
- 
-        return response()->json(['success' => true, 'message' => 'Payment berhasil dihapus.']);
     }
 }
- 

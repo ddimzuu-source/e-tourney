@@ -392,6 +392,9 @@ function Footer() {
 }
 
 export default function HomePage() {
+    useEffect(() => {
+        document.title = "E-Tourney - Platform Turnamen Game Online";
+    }, []);
     return (
         <div className="min-h-screen font-sans bg-[#0d1f1a] selection:bg-emerald-500/30">
             <Navbar />

@@ -1,5 +1,5 @@
 <?php
- 
+
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TournamentController;
@@ -32,6 +32,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/payments',      [PaymentController::class, 'index']);
     Route::post('/payments',     [PaymentController::class, 'store']);
     Route::get('/payments/{id}', [PaymentController::class, 'show']);
+    
+    // ⬇️ TAMBAHAN: Route khusus untuk upload bukti transfer ke Supabase oleh peserta
+    Route::post('/payments/upload-proof', [PaymentController::class, 'uploadProof']);
 });
 
 // ── Admin & Panitia Only Routes (Staf & Pengelola) ───────────────────────────
